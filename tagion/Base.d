@@ -323,7 +323,7 @@ template isOneOf(T, TList...) {
     }
 }
 
-unittest {
+static unittest {
     import std.meta;
     alias Seq=AliasSeq!(long, int, ubyte);
     static assert(isOneOf!(int, Seq));
