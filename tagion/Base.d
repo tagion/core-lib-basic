@@ -1,14 +1,13 @@
 module tagion.Base;
 
-import tagion.crypto.Hash;
 
-private import tagion.hashgraph.ConsensusExceptions;
 private import std.string : format, join, strip;
 private import std.traits;
+private import std.exception : assumeUnique;
 import std.bitmanip : BitArray;
 
 // private import std.algorithm : splitter;
-private import tagion.Options;
+//private import tagion.Options;
 
 enum this_dot="this.";
 
@@ -25,6 +24,11 @@ enum BufferType {
     PAYLOAD
 }
 
+enum BillType {
+    NON_USABLE,
+    TAGIONS,
+    CONTRACTS
+}
 
 alias Buffer=immutable(ubyte)[];
 alias Pubkey     =Typedef!(Buffer, null, BufferType.PUBKEY.stringof);
@@ -37,10 +41,11 @@ alias HashPointer=Typedef!(Buffer, null, BufferType.HASHPOINTER.stringof);
 
 }
 
-string join(string[] list) {
-    import std.array : array_join=join;
-    return list.array_join(options.separator);
-}
+// static string separator;
+// string join(string[] list) {
+//     import std.array : array_join=join;
+//     return list.array_join(separator);
+// }
 
 
 //template isBufferType(T) {
@@ -51,7 +56,6 @@ static unittest {
     static assert(isBufferType!(immutable(ubyte[])));
     static assert(isBufferType!(immutable(ubyte)[]));
     static assert(isBufferType!(Pubkey));
-    pragma(msg, TypedefType!int);
 }
 
 unittest {
@@ -65,7 +69,8 @@ BUF buf_idup(BUF)(immutable(Buffer) buffer) {
 
 
 /**
-   Return the position of first '.' in string and
+   Returns:
+   The position of first '.' in string and
  */
 template find_dot(string str, size_t index=0) {
     static if ( index >= str.length ) {
@@ -82,24 +87,24 @@ template find_dot(string str, size_t index=0) {
     }
 }
 
-// Creates a new clean bitarray
+/// Creates a new clean bitarray
 void  bitarray_clear(out BitArray bits, uint length) @trusted {
     bits.length=length;
 }
 
-// Change the size of the bitarray
-void bitarray_change(ref BitArray bits, uint length) @trusted {
+/// Change the size of the bitarray
+void bitarray_change(ref scope BitArray bits, uint length) @trusted {
     bits.length=length;
 }
 
-const(bool)[] bitarray2bool(ref const(BitArray) bits) @trusted {
+immutable(bool[]) bitarray2bool(ref const(BitArray) bits) @trusted {
     bool[] mask=new bool[bits.length];
     foreach(i, m; bits) {
         if (m) {
             mask[i]=true;
         }
     }
-    return mask;
+    return assumeUnique(mask);
 }
 
 unittest {
@@ -121,6 +126,9 @@ unittest {
     }
 }
 
+/++
+ Countes the number of bits set in mask
++/
 uint countVotes(ref const(BitArray) mask) @trusted {
     uint votes;
     foreach(vote; mask) {
@@ -131,21 +139,29 @@ uint countVotes(ref const(BitArray) mask) @trusted {
     return votes;
 }
 
-
+/++
+ + Wraps a safe version of to!string for a BitArray
+ +/
 string toText(const(BitArray) bits) @trusted {
     return bits.to!string;
 }
 
 enum minimum_nodes = 3;
+/++
+ + Calculates the majority votes
+ + Params:
+ +     voting    = Number of votes
+ +     node_sizw = Total bumber of votes
+ + Returns:
+ +     Returns `true` if the votes are more thna 2/3
+ +/
 @safe
 bool isMajority(const uint voting, const uint node_size) pure nothrow {
     return (node_size >= minimum_nodes) && (3*voting > 2*node_size);
 }
 
 
-/**
-   Template function for removing the "this." prefix
- */
+version(none)
 template basename(alias K) {
     enum name=K.stringof;
     static if (
@@ -165,6 +181,37 @@ template basename(alias K) {
     }
 }
 
+template suffix(string name, size_t index) {
+    static if ( index is 0 ) {
+        alias suffix=name;
+    }
+    else static if ( name[index-1] !is '.' ) {
+        alias suffix=suffix!(name, index-1);
+    }
+    else {
+        enum cut_name=name[index..$];
+        alias suffix=cut_name;
+    }
+}
+
+/++
+  + Template function returns the suffux name after the last '.'
+  +/
+template basename(alias K) {
+    static if ( is(K==string) ) {
+        enum name=K;
+    }
+    else {
+        enum name=K.stringof;
+    }
+    enum basename=suffix!(name, name.length);
+}
+
+mixin template FUNCTION_NAME() {
+    import tagion.Base : basename;
+    enum __FUNCTION_NAME__=basename!(__FUNCTION__)[0..$-1];
+}
+
 unittest {
     enum name_another="another";
     struct Something {
@@ -180,6 +227,9 @@ unittest {
     something.check();
 }
 
+/++
+ + Builds and enum string out of a string array
++/
 template EnumText(string name, string[] list, bool first=true) {
     static if ( first ) {
         enum begin="enum "~name~"{";
@@ -196,9 +246,9 @@ template EnumText(string name, string[] list, bool first=true) {
     }
 }
 
+///
 unittest {
     enum list=["red", "green", "blue"];
-//    pragma(msg, EnumText!("Colour", list));
     mixin(EnumText!("Colour", list));
     static assert(Colour.red == list[0]);
     static assert(Colour.green == list[1]);
@@ -207,7 +257,6 @@ unittest {
 }
 
 enum Control{
-//    KILL=9,
     LIVE=1,
     STOP,
     FAIL,
@@ -216,62 +265,67 @@ enum Control{
     END
 };
 
-@safe
-immutable(Hash) hfuncSHA256(immutable(ubyte)[] data) {
-    import tagion.crypto.SHA256;
-    return SHA256(data);
-}
 
-@safe
-template convertEnum(Enum, Consensus) {
-    //   static if ( (is(Enum==enum)) && (is(Consensus:ConsensusException)) ) {
-    const(Enum) convertEnum(uint enum_number, string file = __FILE__, size_t line = __LINE__) {
-            if ( enum_number <= Enum.max) {
-                return cast(Enum)enum_number;
-            }
-            throw new Consensus(ConsensusFailCode.NETWORK_BAD_PACKAGE_TYPE, file, line);
-            assert(0);
-        }
+/++
+  +  Calculates log2
+  +  Returns:
+  +     log2(n)
++/
+@trusted
+int log2(ulong n) {
+    if ( n == 0 ) {
+        return -1;
+    }
+    import core.bitop : bsr;
+    return bsr(n);
+    // int i;
+    // void S(uint k=((ulong.sizeof*8)>>1))() {
+    //     static if ( k > 0 ) {
+    //         if (n >= (1uL << k)) {
+    //             i += k; n >>= k;
+    //         }
+    //         S!(k>>1);
+    //     }
     // }
+    // S;
+    // return i;
 }
 
-@safe
-template consensusCheck(Consensus) {
-    static if ( is(Consensus:ConsensusException) ) {
-        void consensusCheck(bool flag, ConsensusFailCode code, string file = __FILE__, size_t line = __LINE__) {
-            if (!flag) {
-                throw new Consensus(code, file, line);
-            }
-        }
+
+unittest {
+    // Undefined value returns -1
+    assert(log2(0) == -1);
+    assert(log2(17) == 4);
+    assert(log2(177) == 7);
+    assert(log2(0x1000_000_000) == 36);
+
+}
+
+
+/++
+ + Generate a temporary file name
++/
+string tempfile() {
+    import std.file : deleteme;
+    int dummy;
+    return deleteme~(&dummy).to!string;
+}
+
+template isOneOf(T, TList...) {
+    static if ( TList.length == 0 ) {
+        enum isOneOf = false;
     }
-}
-
-@safe
-template consensusCheckArguments(Consensus) {
-    static if ( is(Consensus:ConsensusException) ) {
-        ref auto consensusCheckArguments(A...)(A args) {
-            struct Arguments {
-                A args;
-                void check(bool flag, ConsensusFailCode code, string file = __FILE__, size_t line = __LINE__) const {
-                    if ( !flag ) {
-                        immutable msg=format(consensus_error_messages[code], args);
-                        throw new Consensus(msg, code, file, line);
-                    }
-                }
-            }
-            return const(Arguments)(args);
-        }
-    }
-}
-
-@safe
-string cutHex(BUF)(BUF buf) if ( isBufferType!BUF )  {
-    import std.format;
-    enum LEN=ulong.sizeof;
-    if ( buf.length < LEN ) {
-        return format("EMPTY[%s]",buf.length);
+    else static if (is(T == TList[0])) {
+        enum isOneOf = true;
     }
     else {
-        return buf[0..LEN].toHexString;
+        alias isOneOf = isOneOf!(T, TList[1..$]);
     }
+}
+
+unittest {
+    import std.meta;
+    alias Seq=AliasSeq!(long, int, ubyte);
+    static assert(isOneOf!(int, Seq));
+    static assert(!isOneOf!(double, Seq));
 }
