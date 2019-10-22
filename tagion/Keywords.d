@@ -6,13 +6,14 @@ private import tagion.Base : EnumText;
 enum _keywords = [
     "pubkey",       // Pubkey
     "signature",        // signature of the block
-    "altitude",   // altitude
+//    "altitude",   // altitude
     "received_order",
-    "tidewave",
-    "wavefront",  // Wave front is the list of events hashs
-    "ebody",      // Event body
-    "event",      // Event including the eventbody
+    // "tidewave",
+    // "wavefront",  // Wave front is the list of events hashs
+//    "ebody",      // Event body
+//    "event",      // Event including the eventbody
 
+    // HashGraph
     "message",
     "mother",
     "father",
@@ -40,7 +41,7 @@ enum _keywords = [
     "strong_votes",
     "strong_mask",
     "iterations",
-    "altenative",
+//    "altenative",
     "looked_at_mask",
     "looked_at_count",
     "seeing_completed",
@@ -50,24 +51,77 @@ enum _keywords = [
     "time",
     "events",     // List of event
     "type",       // Package type
-    "block",     // block
+//    "block",     // block
 
     "rim",
     "buckets",
     "tab",
     "transaction_id",
-    "result_code",
-    "error_code",
+    "output",
     "signatures",
-    "signatur",
-    "transaction_obj",
-    "transaction_scripting_obj",
+//    "signatur",
+    "transaction_object",
+    "transaction_scripting_object",
     "payers",
     "payees",
-    "bills",
+    "input_bills",
+    "output_bills",
     "bill",
-    "bill_number"
+    "bill_number",
+    "bill_body",
+    "bill_type",
+    "value",
+    "ownerkey",
+
+    // FixMe should be change to "result" and "error" to fit the HiRPC
+    "result_code",
+    "error_code",
+
+    // Scripting
+    "code",
+    "source",
+
+    // DART
+    "indices",
+    "fingerprint",
+    "fingerprints",
+    "archives",
+    "branches",
+    "read",
+    "rims",
+    "keys",
+    "stub",
+
+    // HiRPC (Similar to JSON-RPC 2.0)
+//    "rev",
+    "method",
+    "params",
+    "error", // error_code
+    "result",
+    "id", //
+    "data",
+    "hrpc"
     ];
 
 // Generated the Keywords and enum string list
 mixin(EnumText!("Keywords", _keywords));
+
+/++
+ Check if the CTE string $(LREF word) belongs to $(LREF K) string enum
++/
+template isValid(K, string word) if ( is(K==enum) ) {
+    enum code="K."~word;
+    enum isValid=__traits(compiles, mixin(code));
+}
+
+static unittest {
+    import std.traits : EnumMembers;
+    enum allkeys=EnumMembers!Keywords;
+    enum kmin=allkeys[0];
+    enum kmax=allkeys[$-1];
+    enum kmid=allkeys[$/2];
+    static assert(isValid!(Keywords, kmin));
+    static assert(isValid!(Keywords, kmax));
+    static assert(isValid!(Keywords, kmid));
+    static assert(!isValid!(Keywords, "xxx"));
+}
