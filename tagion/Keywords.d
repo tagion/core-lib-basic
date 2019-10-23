@@ -100,7 +100,7 @@ enum _keywords = [
     "result",
     "id", //
     "data",
-    "hrpc"
+    "hirpc"
     ];
 
 // Generated the Keywords and enum string list
