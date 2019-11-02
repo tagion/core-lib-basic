@@ -5,6 +5,7 @@ private import std.string : format, join, strip;
 private import std.traits;
 private import std.exception : assumeUnique;
 import std.bitmanip : BitArray;
+import std.meta : AliasSeq;
 
 // private import std.algorithm : splitter;
 //private import tagion.Options;
@@ -327,22 +328,22 @@ static unittest {
    void if not type is found
 
  */
-template castTo(T, TList...) {
+template CastTo(T, TList...) {
     static if(TList.length is 0) {
-        alias castTo=void;
+        alias CastTo=void;
     }
     else {
-        alias CastT=TList[0];
-        static if (is(T:CastT)) {
-            alias castTo=CastT;
+        alias castT=TList[0];
+        static if (is(T:castT)) {
+            alias CastTo=castT;
         }
         else {
-            alias castTo=castTo!(T, TList[1..$]);
+            alias CastTo=CastTo!(T, TList[1..$]);
         }
     }
 }
 
 static unittest {
-    static assert(is(void==castTo!(string, AliasSeq!(int, long, double))));
-    static assert(is(double==castTo!(float, AliasSeq!(int, long, double))));
+    static assert(is(void==CastTo!(string, AliasSeq!(int, long, double))));
+    static assert(is(double==CastTo!(float, AliasSeq!(int, long, double))));
 }
