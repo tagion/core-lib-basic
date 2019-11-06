@@ -5,6 +5,7 @@ private import std.string : format, join, strip;
 private import std.traits;
 private import std.exception : assumeUnique;
 import std.bitmanip : BitArray;
+import std.meta : AliasSeq;
 
 // private import std.algorithm : splitter;
 //private import tagion.Options;
@@ -227,6 +228,8 @@ unittest {
     something.check();
 }
 
+
+
 /++
  + Builds and enum string out of a string array
 +/
@@ -278,17 +281,6 @@ int log2(ulong n) {
     }
     import core.bitop : bsr;
     return bsr(n);
-    // int i;
-    // void S(uint k=((ulong.sizeof*8)>>1))() {
-    //     static if ( k > 0 ) {
-    //         if (n >= (1uL << k)) {
-    //             i += k; n >>= k;
-    //         }
-    //         S!(k>>1);
-    //     }
-    // }
-    // S;
-    // return i;
 }
 
 
@@ -328,4 +320,30 @@ static unittest {
     alias Seq=AliasSeq!(long, int, ubyte);
     static assert(isOneOf!(int, Seq));
     static assert(!isOneOf!(double, Seq));
+}
+
+/**
+   Finds the type in the TList which T can be typecast to
+   Returns:
+   void if not type is found
+
+ */
+template CastTo(T, TList...) {
+    static if(TList.length is 0) {
+        alias CastTo=void;
+    }
+    else {
+        alias castT=TList[0];
+        static if (is(T:castT)) {
+            alias CastTo=castT;
+        }
+        else {
+            alias CastTo=CastTo!(T, TList[1..$]);
+        }
+    }
+}
+
+static unittest {
+    static assert(is(void==CastTo!(string, AliasSeq!(int, long, double))));
+    static assert(is(double==CastTo!(float, AliasSeq!(int, long, double))));
 }
