@@ -7,7 +7,7 @@ import tagion.Options;
 
 version(UPDATE_MESSAGE_TABEL) {
     @safe synchronized struct Message {
-        static shared string[string] translation;
+        private static shared string[string] translation;
         static JSONValue toJSON() {
             JSONValue language;
             result[language.stringof]="en";
@@ -20,8 +20,11 @@ version(UPDATE_MESSAGE_TABEL) {
     }
 }
 else {
+    private static __gshared string[string] translation;
     synchronized struct Message {
-        static __gshared string[string] translation;
+        static set(string from, string to) {
+            translation[from]=to;
+        }
         static void load(JSONValue json) {
             auto trans=json[translation.stringof].object;
             foreach(from, to; trans) {
@@ -36,13 +39,13 @@ string message(Args...)(string fmt, lazy Args args) {
     if (options.message.language == "" ) {
         version(UPDATE_MESSAGE_TABEL) {
             if (!(fmt in translation)) {
-                Message.translation[fmt]=fmt;
+                Message.set(fmt,fmt);
             }
         }
         return format(fmt, args);
     }
     else {
-        immutable translate_fmt=Message.translation.get(fmt, fmt);
-        return format(fmt, args);
+        immutable translate_fmt=translation.get(fmt, fmt);
+        return format(translate_fmt, args);
     }
 }
