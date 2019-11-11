@@ -20,15 +20,19 @@ version(UPDATE_MESSAGE_TABEL) {
     }
 }
 else {
-    private static __gshared string[string] translation;
+    private static __gshared string[string] __translation;
+    static immutable(string[string]*) translation;
+    static this() {
+        translation=cast(immutable)(&__translation);
+    }
     synchronized struct Message {
-        static set(string from, string to) {
-            translation[from]=to;
+        static void set(string from, string to) {
+            __translation[from]=to;
         }
         static void load(JSONValue json) {
             auto trans=json[translation.stringof].object;
             foreach(from, to; trans) {
-                translation[from]=to.str;
+                __translation[from]=to.str;
             }
         }
     }

@@ -250,13 +250,17 @@ struct Options {
 __gshared static Options __gshared_options;
 
 protected static Options options_memory;
+static immutable(Options*) options;
 
+static this() {
+    options=cast(immutable)(&options_memory);
+}
 //static immutable(Options*) options;
 // Points to the thread global options
-@trusted
-static immutable(Options*) options() {
-    return cast(immutable)(&options_memory);
-}
+// @trusted
+// static immutable(Options*) options() nothrow {
+//     return cast(immutable)(&options_memory);
+// }
 
 
 // static this() @nogc {
