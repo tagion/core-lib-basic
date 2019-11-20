@@ -252,7 +252,7 @@ __gshared static Options __gshared_options;
 protected static Options options_memory;
 static immutable(Options*) options;
 
-static this() {
+shared static this() {
     options=cast(immutable)(&options_memory);
 }
 //static immutable(Options*) options;
