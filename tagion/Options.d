@@ -74,9 +74,9 @@ mixin template JSONCommon() {
                 m=cast(type)value;
             }
             else static if (is(type==bool)) {
-                check((json_value[name].type == JSON.JSON_TYPE.TRUE) || (json_value[name].type == JSON.JSON_TYPE.FALSE),
+                check((json_value[name].type == JSON.JSONType.true_) || (json_value[name].type == JSON.JSONType.false_),
                     format("Type %s expected for %s but the json type is %s", type.stringof, m.stringof, json_value[name].type));
-                m=json_value[name].type == JSON.JSON_TYPE.TRUE;
+                m=json_value[name].type == JSON.JSONType.true_;
             }
             else {
                 assert(0, format("Unsupported type %s for %s member", type.stringof, m.stringof));
