@@ -172,14 +172,14 @@ struct Options {
     Transcript transcript;
 
     struct Monitor {
-        string task_name;
+        string task_name; /// Use for the montor task name
         uint max;     /++ Maximum number of monitor sockets open
                        If this value is set to 0
                        one socket is opened for each node
                        +/
         ushort port; /// Monitor port
         bool disable; /// Disable monitor
-        string name;  /// Use for the montor task name
+//        string name;  /// Use for the montor task name
         mixin JSONCommon;
     }
 
@@ -285,8 +285,6 @@ static void setOptions(const(Options) opt) {
  + Sets the thread global options to the value of __gshared_options
  +/
 static void setSharedOptions() {
-    import std.stdio;
-    writefln("__gshared_options=%s", __gshared_options);
     setOptions(__gshared_options);
 }
 
@@ -433,7 +431,7 @@ __gshared static setDefaultOption() {
         port=10900;
         disable=false;
         max=0;
-        name="monitor";
+        task_name="monitor";
     }
     // Logger
     with(__gshared_options.logger) {
