@@ -162,9 +162,10 @@ struct Options {
         uint pause_from; // Sets the from/to delay between transaction test
         uint pause_to;
 
+        string prefix;
         // Scripting api log filename
         // Scripting api name used for log filename etc.
-        string name;
+        //string name;
 
         mixin JSONCommon;
     }
@@ -173,6 +174,7 @@ struct Options {
 
     struct Monitor {
         string task_name; /// Use for the montor task name
+        string prefix;
         uint max;     /++ Maximum number of monitor sockets open
                        If this value is set to 0
                        one socket is opened for each node
@@ -187,7 +189,8 @@ struct Options {
 
     struct Transaction {
         string task_name;
-        string name;
+        string prefix;
+        //      string name;
         ushort port;
         ushort max;
         bool disable;
@@ -198,7 +201,8 @@ struct Options {
 
     struct DART {
         string task_name;
-        string name;
+        string prefix;
+//        string name;
         string path;
         // ushort port;
         // ushort max;
@@ -344,7 +348,8 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         std.getopt.config.bundling,
         "version",   "display the version",     &version_switch,
         "overwrite|O", "Overwrite the config file", &overwrite_switch,
-        "transact-enable|T", format("Transaction test enable: default: %s", __gshared_options.transcript.enable), &(__gshared_options.transcript.enable),
+        "transcript-enable|T", format("Transcript test enable: default: %s", __gshared_options.transcript.enable), &(__gshared_options.transcript.enable),
+        "transaction-disable|D",    format("Transaction disable: default %s", __gshared_options.transaction.disable),  &(__gshared_options.transaction.disable),
 
         "path|I",    "Sets the search path",     &(__gshared_options.path_arg),
         "trace-gossip|g",    "Sets the search path",     &(__gshared_options.trace_gossip),
@@ -374,7 +379,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
 
         "transcript-from", format("Transcript test from delay: default: %d", __gshared_options.transcript.pause_from), &(__gshared_options.transcript.pause_from),
         "transcript-to", format("Transcript test to delay: default: %d", __gshared_options.transcript.pause_to), &(__gshared_options.transcript.pause_to),
-        "transcript-log",  format("Transcript log filename: default: %s", __gshared_options.transcript.name), &(__gshared_options.transcript.name),
+        "transcript-log",  format("Transcript log filename: default: %s", __gshared_options.transcript.task_name), &(__gshared_options.transcript.task_name),
 
 //        "help!h", "Display the help text",    &help_switch,
         );
@@ -417,21 +422,24 @@ __gshared static setDefaultOption() {
     with (__gshared_options.transcript) {
         pause_from=333;
         pause_to=888;
-        name="transcript";
+        prefix="Transcript";
+        task_name=prefix;
     }
     // Transaction
     with(__gshared_options.transaction) {
         port=10800;
         disable=false;
         max=0;
-        name="transaction";
+        prefix="Transaction";
+        task_name=prefix;
     }
     // Monitor
     with(__gshared_options.monitor) {
         port=10900;
         disable=false;
         max=0;
-        task_name="monitor";
+        prefix="Monitor";
+        task_name=prefix;
     }
     // Logger
     with(__gshared_options.logger) {
