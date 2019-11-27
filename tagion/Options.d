@@ -89,11 +89,6 @@ mixin template JSONCommon() {
 struct Options {
     uint nodes;     /// Number of concurrent nodes (Test mode)
 
-    uint max_monitors;     /++ Maximum number of monitor sockets open
-                            If this value is set to 0
-                            one socket is opened for each node
-                            +/
-
     uint seed;             /// Random seed for pseudo random sequency (Test mode)
 
     uint delay;            /// Delay between heart-beats in ms (Test mode)
@@ -103,13 +98,11 @@ struct Options {
 
     bool infinity;         /// Runs forever
 
-//    uint port;             /// The port number of the first socket port
     string url;            /// URL to be used for the sockets
     bool trace_gossip;     /// Enable the package dump for the transeived packagies
     string tmp;            /// Directory for the trace files etc.
     string stdout;         /// Overwrites the standard output
 
-//    ushort network_socket_port;     /// Port for network socket
     bool sequential;       /// Sequential test mode, used to replace the same graph from a the seed value
 
     string separator;      /// Name separator
@@ -119,6 +112,7 @@ struct Options {
     uint node_id;          /// This is use to set the node_id in emulator mode in normal node this is allways 0
     string node_name;      /// Name of the node
 
+    ushort min_port;       /// Minum value of the port number
     mixin JSONCommon;
 
     struct ScriptingEngine {
@@ -163,9 +157,6 @@ struct Options {
         uint pause_to;
 
         string prefix;
-        // Scripting api log filename
-        // Scripting api name used for log filename etc.
-        //string name;
 
         mixin JSONCommon;
     }
@@ -175,13 +166,11 @@ struct Options {
     struct Monitor {
         string task_name; /// Use for the montor task name
         string prefix;
-        uint max;     /++ Maximum number of monitor sockets open
-                       If this value is set to 0
-                       one socket is opened for each node
-                       +/
-        ushort port; /// Monitor port
-        bool disable; /// Disable monitor
-//        string name;  /// Use for the montor task name
+        uint max;         /++ Maximum number of monitor sockets open
+                              If this value is set to 0
+                              one socket is opened for each node
+                              +/
+        ushort port;      /// Monitor port
         mixin JSONCommon;
     }
 
@@ -191,9 +180,9 @@ struct Options {
         string task_name;
         string prefix;
         //      string name;
-        ushort port;
-        ushort max;
-        bool disable;
+        ushort port; // port <= 6000 means disable
+        ushort max; // max == 0 means all
+//        bool disable;
         mixin JSONCommon;
     }
 
@@ -349,7 +338,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "version",   "display the version",     &version_switch,
         "overwrite|O", "Overwrite the config file", &overwrite_switch,
         "transcript-enable|T", format("Transcript test enable: default: %s", __gshared_options.transcript.enable), &(__gshared_options.transcript.enable),
-        "transaction-disable|D",    format("Transaction disable: default %s", __gshared_options.transaction.disable),  &(__gshared_options.transaction.disable),
+        "transaction-max|D",    format("Transaction max = 0 means all nodes: default %d", __gshared_options.transaction.max),  &(__gshared_options.transaction.max),
 
         "path|I",    "Sets the search path",     &(__gshared_options.path_arg),
         "trace-gossip|g",    "Sets the search path",     &(__gshared_options.trace_gossip),
@@ -359,11 +348,11 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "delay|d",   format("Sets delay: default: %d (ms)", __gshared_options.delay), &(__gshared_options.delay),
         "loops",     format("Sets the loop count (loops=0 runs forever): default %d", __gshared_options.loops), &(__gshared_options.loops),
         "url",       format("Sets the url: default %s", __gshared_options.url), &(__gshared_options.url),
-        "noserv|n",  format("Disable monitor sockets: default %s", __gshared_options.monitor.disable), &(__gshared_options.monitor.disable),
+//        "noserv|n",  format("Disable monitor sockets: default %s", __gshared_options.monitor.disable), &(__gshared_options.monitor.disable),
         "sockets|M", format("Sets maximum number of monitors opened: default %s", __gshared_options.monitor.max), &(__gshared_options.monitor.max),
         "tmp",       format("Sets temporaty work directory: default '%s'", __gshared_options.tmp), &(__gshared_options.tmp),
-        "monitor|P",    format("Sets first monitor port of the port sequency: default %d", __gshared_options.monitor.port),  &(__gshared_options.monitor.port),
-        "transaction|p",    format("Sets first transaction port of the port sequency: default %d", __gshared_options.transaction.port),  &(__gshared_options.transaction.port),
+        "monitor|P",    format("Sets first monitor port of the port sequency (port>=%d): default %d", __gshared_options.min_port, __gshared_options.monitor.port),  &(__gshared_options.monitor.port),
+        "transaction|p",    format("Sets first transaction port of the port sequency (port>=%d): default %d", __gshared_options.min_port, __gshared_options.transaction.port),  &(__gshared_options.transaction.port),
         "s|seq",     format("The event is produced sequential this is only used in test mode: default %s", __gshared_options.sequential), &(__gshared_options.sequential),
         "stdout",    format("Set the stdout: default %s", __gshared_options.stdout), &(__gshared_options.stdout),
 
@@ -404,6 +393,7 @@ __gshared static setDefaultOption() {
         separator="_";
 //  s.network_socket_port =11900;
         sequential=false;
+        min_port=6000;
     }
     // Scripting
     with(__gshared_options.scripting_engine) {
@@ -428,7 +418,6 @@ __gshared static setDefaultOption() {
     // Transaction
     with(__gshared_options.transaction) {
         port=10800;
-        disable=false;
         max=0;
         prefix="Transaction";
         task_name=prefix;
@@ -436,7 +425,6 @@ __gshared static setDefaultOption() {
     // Monitor
     with(__gshared_options.monitor) {
         port=10900;
-        disable=false;
         max=0;
         prefix="Monitor";
         task_name=prefix;
