@@ -7,6 +7,7 @@ import std.traits;
 import std.file;
 import std.getopt;
 
+//import stdio=std.stdio;
 import tagion.Base : basename;
 
 @safe
@@ -54,7 +55,7 @@ mixin template JSONCommon() {
     }
 
     private void parse(ref JSON.JSONValue json_value) {
-        foreach(i, m; this.tupleof) {
+        foreach(i, ref m; this.tupleof) {
             enum name=basename!(this.tupleof[i]);
             alias type=typeof(m);
             static if (is(type==struct)) {
@@ -72,6 +73,7 @@ mixin template JSONCommon() {
                 }
                 check((value >= type.min) && (value <= type.max), format("Value %d out of range for type %s of %s", value, type.stringof, m.stringof ));
                 m=cast(type)value;
+
             }
             else static if (is(type==bool)) {
                 check((json_value[name].type == JSON.JSONType.true_) || (json_value[name].type == JSON.JSONType.false_),
@@ -248,36 +250,20 @@ static immutable(Options*) options;
 shared static this() {
     options=cast(immutable)(&options_memory);
 }
-//static immutable(Options*) options;
-// Points to the thread global options
-// @trusted
-// static immutable(Options*) options() nothrow {
-//     return cast(immutable)(&options_memory);
-// }
-
-
-// static this() @nogc {
-//     options=cast(immutable)(&options_memory);
-
-// }
 
 //@trusted
 /++
 +  Sets the thread global options opt
 +/
 @safe
-static void setOptions(const(Options) opt) {
+static void setOptions(ref const(Options) opt) {
     options_memory=opt;
-//    separator=opt.separator;
-//    seperator=opt.seperator;
-    // import core.stdc.string : memcpy;
-    // memcpy(&options_memory, &__gshared_options, sizeof(Options));
 }
 
 /++
- + Sets the thread global options to the value of __gshared_options
+ + Sets the thread local options to the value of __gshared_options
  +/
-static void setSharedOptions() {
+protected static void setThreadLocalOptions() {
     setOptions(__gshared_options);
 }
 
@@ -330,53 +316,53 @@ struct TransactionMiddlewareOptions {
 __gshared static TransactionMiddlewareOptions transaction_middleware_options;
 
 
-static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool overwrite_switch) {
+static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool overwrite_switch, ref scope Options options) {
     import std.getopt;
     return getopt(
         args,
         std.getopt.config.bundling,
         "version",   "display the version",     &version_switch,
         "overwrite|O", "Overwrite the config file", &overwrite_switch,
-        "transcript-enable|T", format("Transcript test enable: default: %s", __gshared_options.transcript.enable), &(__gshared_options.transcript.enable),
-        "transaction-max|D",    format("Transaction max = 0 means all nodes: default %d", __gshared_options.transaction.max),  &(__gshared_options.transaction.max),
+        "transcript-enable|T", format("Transcript test enable: default: %s", options.transcript.enable), &(options.transcript.enable),
+        "transaction-max|D",    format("Transaction max = 0 means all nodes: default %d", options.transaction.max),  &(options.transaction.max),
 
-        "path|I",    "Sets the search path",     &(__gshared_options.path_arg),
-        "trace-gossip|g",    "Sets the search path",     &(__gshared_options.trace_gossip),
-        "nodes|N",   format("Sets the number of nodes: default %d", __gshared_options.nodes), &(__gshared_options.nodes),
-        "seed",      format("Sets the random seed: default %d", __gshared_options.seed),       &(__gshared_options.seed),
-        "timeout|t", format("Sets timeout: default %d (ms)", __gshared_options.timeout), &(__gshared_options.timeout),
-        "delay|d",   format("Sets delay: default: %d (ms)", __gshared_options.delay), &(__gshared_options.delay),
-        "loops",     format("Sets the loop count (loops=0 runs forever): default %d", __gshared_options.loops), &(__gshared_options.loops),
-        "url",       format("Sets the url: default %s", __gshared_options.url), &(__gshared_options.url),
-//        "noserv|n",  format("Disable monitor sockets: default %s", __gshared_options.monitor.disable), &(__gshared_options.monitor.disable),
-        "sockets|M", format("Sets maximum number of monitors opened: default %s", __gshared_options.monitor.max), &(__gshared_options.monitor.max),
-        "tmp",       format("Sets temporaty work directory: default '%s'", __gshared_options.tmp), &(__gshared_options.tmp),
-        "monitor|P",    format("Sets first monitor port of the port sequency (port>=%d): default %d", __gshared_options.min_port, __gshared_options.monitor.port),  &(__gshared_options.monitor.port),
-        "transaction|p",    format("Sets first transaction port of the port sequency (port>=%d): default %d", __gshared_options.min_port, __gshared_options.transaction.port),  &(__gshared_options.transaction.port),
-        "s|seq",     format("The event is produced sequential this is only used in test mode: default %s", __gshared_options.sequential), &(__gshared_options.sequential),
-        "stdout",    format("Set the stdout: default %s", __gshared_options.stdout), &(__gshared_options.stdout),
+        "path|I",    "Sets the search path",     &(options.path_arg),
+        "trace-gossip|g",    "Sets the search path",     &(options.trace_gossip),
+        "nodes|N",   format("Sets the number of nodes: default %d", options.nodes), &(options.nodes),
+        "seed",      format("Sets the random seed: default %d", options.seed),       &(options.seed),
+        "timeout|t", format("Sets timeout: default %d (ms)", options.timeout), &(options.timeout),
+        "delay|d",   format("Sets delay: default: %d (ms)", options.delay), &(options.delay),
+        "loops",     format("Sets the loop count (loops=0 runs forever): default %d", options.loops), &(options.loops),
+        "url",       format("Sets the url: default %s", options.url), &(options.url),
+//        "noserv|n",  format("Disable monitor sockets: default %s", options.monitor.disable), &(options.monitor.disable),
+        "sockets|M", format("Sets maximum number of monitors opened: default %s", options.monitor.max), &(options.monitor.max),
+        "tmp",       format("Sets temporaty work directory: default '%s'", options.tmp), &(options.tmp),
+        "monitor|P",    format("Sets first monitor port of the port sequency (port>=%d): default %d", options.min_port, options.monitor.port),  &(options.monitor.port),
+        "transaction|p",    format("Sets first transaction port of the port sequency (port>=%d): default %d", options.min_port, options.transaction.port),  &(options.transaction.port),
+        "s|seq",     format("The event is produced sequential this is only used in test mode: default %s", options.sequential), &(options.sequential),
+        "stdout",    format("Set the stdout: default %s", options.stdout), &(options.stdout),
 
-        "script-ip",  format("Sets the listener ip address: default %s", __gshared_options.scripting_engine.listener_ip_address), &(__gshared_options.scripting_engine.listener_ip_address),
-        "script-port", format("Sets the listener port: default %d", __gshared_options.scripting_engine.listener_port), &(__gshared_options.scripting_engine.listener_port),
-        "script-queue", format("Sets the listener max queue lenght: default %d", __gshared_options.scripting_engine.listener_max_queue_length), &(__gshared_options.scripting_engine.listener_max_queue_length),
-        "script-maxcon",  format("Sets the maximum number of connections: default: %d", __gshared_options.scripting_engine.max_connections), &(__gshared_options.scripting_engine.max_connections),
-        "script-maxqueue",  format("Sets the maximum queue length: default: %d", __gshared_options.scripting_engine.listener_max_queue_length), &(__gshared_options.scripting_engine.listener_max_queue_length),
-        "script-maxfibres",  format("Sets the maximum number of fibres: default: %d", __gshared_options.scripting_engine.max_number_of_accept_fibers), &(__gshared_options.scripting_engine.max_number_of_accept_fibers),
-        "script-maxreuse",  format("Sets the maximum number of fibre reuse: default: %d", __gshared_options.scripting_engine.max_number_of_fiber_reuse), &(__gshared_options.scripting_engine.max_number_of_fiber_reuse),
-        "script-log",  format("Scripting engine log filename: default: %s", __gshared_options.scripting_engine.name), &(__gshared_options.scripting_engine.name),
+        "script-ip",  format("Sets the listener ip address: default %s", options.scripting_engine.listener_ip_address), &(options.scripting_engine.listener_ip_address),
+        "script-port", format("Sets the listener port: default %d", options.scripting_engine.listener_port), &(options.scripting_engine.listener_port),
+        "script-queue", format("Sets the listener max queue lenght: default %d", options.scripting_engine.listener_max_queue_length), &(options.scripting_engine.listener_max_queue_length),
+        "script-maxcon",  format("Sets the maximum number of connections: default: %d", options.scripting_engine.max_connections), &(options.scripting_engine.max_connections),
+        "script-maxqueue",  format("Sets the maximum queue length: default: %d", options.scripting_engine.listener_max_queue_length), &(options.scripting_engine.listener_max_queue_length),
+        "script-maxfibres",  format("Sets the maximum number of fibres: default: %d", options.scripting_engine.max_number_of_accept_fibers), &(options.scripting_engine.max_number_of_accept_fibers),
+        "script-maxreuse",  format("Sets the maximum number of fibre reuse: default: %d", options.scripting_engine.max_number_of_fiber_reuse), &(options.scripting_engine.max_number_of_fiber_reuse),
+        "script-log",  format("Scripting engine log filename: default: %s", options.scripting_engine.name), &(options.scripting_engine.name),
 
 
-        "transcript-from", format("Transcript test from delay: default: %d", __gshared_options.transcript.pause_from), &(__gshared_options.transcript.pause_from),
-        "transcript-to", format("Transcript test to delay: default: %d", __gshared_options.transcript.pause_to), &(__gshared_options.transcript.pause_to),
-        "transcript-log",  format("Transcript log filename: default: %s", __gshared_options.transcript.task_name), &(__gshared_options.transcript.task_name),
+        "transcript-from", format("Transcript test from delay: default: %d", options.transcript.pause_from), &(options.transcript.pause_from),
+        "transcript-to", format("Transcript test to delay: default: %d", options.transcript.pause_to), &(options.transcript.pause_to),
+        "transcript-log",  format("Transcript log filename: default: %s", options.transcript.task_name), &(options.transcript.task_name),
 
 //        "help!h", "Display the help text",    &help_switch,
         );
 };
 
-__gshared static setDefaultOption() {
+static setDefaultOption(ref Options options) {
     // Main
-    with(__gshared_options) {
+    with(options) {
         nodeprefix="Node";
         logext="log";
         seed=42;
@@ -396,7 +382,7 @@ __gshared static setDefaultOption() {
         min_port=6000;
     }
     // Scripting
-    with(__gshared_options.scripting_engine) {
+    with(options.scripting_engine) {
         listener_ip_address = "0.0.0.0";
         listener_port = 18_444;
         listener_max_queue_length = 100;
@@ -409,30 +395,30 @@ __gshared static setDefaultOption() {
         min_duration_for_accept_ms = 3000;
     }
     // Transcript
-    with (__gshared_options.transcript) {
+    with (options.transcript) {
         pause_from=333;
         pause_to=888;
         prefix="Transcript";
         task_name=prefix;
     }
     // Transaction
-    with(__gshared_options.transaction) {
+    with(options.transaction) {
         port=10800;
         max=0;
         prefix="Transaction";
         task_name=prefix;
     }
     // Monitor
-    with(__gshared_options.monitor) {
+    with(options.monitor) {
         port=10900;
         max=0;
         prefix="Monitor";
         task_name=prefix;
     }
     // Logger
-    with(__gshared_options.logger) {
+    with(options.logger) {
         task_name="tagion.logger";
         file_name="/tmp/tagion.log";
     }
-    setSharedOptions();
+//    setThreadLocalOptions();
 }
