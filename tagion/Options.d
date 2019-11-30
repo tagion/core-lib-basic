@@ -241,8 +241,8 @@ struct Options {
 
 }
 
-//__gshared protected static Options __gshared_options;
-__gshared static Options __gshared_options;
+// //__gshared protected static Options __gshared_options;
+// __gshared static Options __gshared_options;
 
 protected static Options options_memory;
 static immutable(Options*) options;
@@ -260,12 +260,12 @@ static void setOptions(ref const(Options) opt) {
     options_memory=opt;
 }
 
-/++
- + Sets the thread local options to the value of __gshared_options
- +/
-protected static void setThreadLocalOptions() {
-    setOptions(__gshared_options);
-}
+// /++
+//  + Sets the thread local options to the value of __gshared_options
+//  +/
+// protected static void setThreadLocalOptions() {
+//     setOptions(__gshared_options);
+// }
 
 /++
 + Returns:
@@ -320,6 +320,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
     import std.getopt;
     return getopt(
         args,
+        std.getopt.config.caseSensitive,
         std.getopt.config.bundling,
         "version",   "display the version",     &version_switch,
         "overwrite|O", "Overwrite the config file", &overwrite_switch,
