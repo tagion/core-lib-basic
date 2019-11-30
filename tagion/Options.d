@@ -117,6 +117,12 @@ struct Options {
     ushort min_port;       /// Minum value of the port number
     mixin JSONCommon;
 
+    struct Heatbeat {
+        string task_name;
+        mixin JSONCommon;
+    }
+    Heatbeat heartbeat;
+
     struct ScriptingEngine {
         string task_name;
         string listener_ip_address;       /// Ip address
@@ -173,6 +179,7 @@ struct Options {
                               one socket is opened for each node
                               +/
         ushort port;      /// Monitor port
+        uint timeout;     /// Socket listerne timeout in msecs
         mixin JSONCommon;
     }
 
@@ -182,6 +189,7 @@ struct Options {
         string task_name;
         string prefix;
         //      string name;
+        uint timeout;     /// Socket listerne timeout in msecs
         ushort port; // port <= 6000 means disable
         ushort max; // max == 0 means all
 //        bool disable;
@@ -382,6 +390,10 @@ static setDefaultOption(ref Options options) {
         sequential=false;
         min_port=6000;
     }
+
+    with(options.heartbeat) {
+        task_name="heartbeat";
+    }
     // Scripting
     with(options.scripting_engine) {
         listener_ip_address = "0.0.0.0";
@@ -408,6 +420,7 @@ static setDefaultOption(ref Options options) {
         max=0;
         prefix="Transaction";
         task_name=prefix;
+        timeout=250;
     }
     // Monitor
     with(options.monitor) {
@@ -415,6 +428,7 @@ static setDefaultOption(ref Options options) {
         max=0;
         prefix="Monitor";
         task_name=prefix;
+        timeout=500;
     }
     // Logger
     with(options.logger) {
