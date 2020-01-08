@@ -114,6 +114,7 @@ struct Options {
     uint node_id;          /// This is use to set the node_id in emulator mode in normal node this is allways 0
     string node_name;      /// Name of the node
     ulong port;
+    ulong portBase;
     ushort min_port;       /// Minum value of the port number
     mixin JSONCommon;
 
@@ -391,7 +392,8 @@ static setDefaultOption(ref Options options) {
     // Main
     with(options) {
         nodeprefix="Node";
-        port = 4000;
+        port = 4001;
+        portBase = 4000;
         logext="log";
         seed=42;
         delay=200;
@@ -463,20 +465,18 @@ static setDefaultOption(ref Options options) {
         path="/usr/tmp/";
         fromAng=5;
         toAng=10;
-        ringWidth = 4;
-        rings = 4;
+        ringWidth = 1;
+        rings = 3;
         initialize = true;
         generate = true;
         synchronize = false;
-        Host h = { 
-            timeout: 3000, 
-            max_size: 10240
-        };
-        host = h;
-        Synchronize s = {
-            max: 5
-        };
-        sync = s;
+        with(host){
+            timeout = 3000;
+            max_size = 1024 * 10;
+        }
+        with(sync){
+            max = 5;
+        }
     }
 //    setThreadLocalOptions();
 }
