@@ -211,6 +211,7 @@ struct Options {
         bool initialize;
         bool generate;
         bool synchronize;
+        bool setAngleFromPort;
         struct Host{
             ulong timeout;
             uint max_size;
@@ -219,7 +220,8 @@ struct Options {
         Host host;
         
         struct Synchronize{
-            ulong max;
+            ulong maxSlaves;
+            ulong maxMasters;
             mixin JSONCommon;
         }
         Synchronize sync;
@@ -384,6 +386,12 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "transcript-log",  format("Transcript log filename: default: %s", options.transcript.task_name), &(options.transcript.task_name),
 
         "syncDart", "Need synchronization", &(options.dart.synchronize),
+        "setAngleFromPort", "Set dart from/to angle based on port", &(options.dart.setAngleFromPort),
+        
+        "dart-init", "Initialize block file", &(options.dart.initialize),
+        "dart-generate", "Generate block file", &(options.dart.generate),
+        "dart-from", "Dart from angle", &(options.dart.fromAng),
+        "dart-to", "Dart to angle", &(options.dart.toAng),
 //        "help!h", "Display the help text",    &help_switch,
         );
 };
@@ -470,12 +478,14 @@ static setDefaultOption(ref Options options) {
         initialize = true;
         generate = true;
         synchronize = false;
+        setAngleFromPort = false;
         with(host){
             timeout = 3000;
             max_size = 1024 * 10;
         }
         with(sync){
-            max = 5;
+            maxMasters = 1;
+            maxSlaves = 4;
         }
     }
 //    setThreadLocalOptions();
