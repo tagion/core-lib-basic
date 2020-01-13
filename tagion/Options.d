@@ -137,11 +137,11 @@ struct Options {
 
         uint   max_number_of_fiber_reuse;   /// Number of times to reuse a fiber
 
-        string tmp_debug_dir;             /// Directory to dump hibon data
+        // string tmp_debug_dir;             /// Directory to dump hibon data
 
-        string tmp_debug_bills_filename;  /// Name of bills file for debug hibon dump
+        // string tmp_debug_bills_filename;  /// Name of bills file for debug hibon dump
 
-        string name;                      /// Scripting engine name used for log filename etc.
+        // string name;                      /// Scripting engine name used for log filename etc.
 
         uint min_number_of_fibers;
         uint min_duration_for_accept_ms;
@@ -157,7 +157,7 @@ struct Options {
         mixin JSONCommon;
     }
 
-    SSLService scripting_engine;
+    //SSLService scripting_engine;
 
     struct Transcript {
         string task_name;
@@ -193,6 +193,7 @@ struct Options {
         string prefix;
         //      string name;
         uint timeout;     /// Socket listerne timeout in msecs
+        SSLService service;
         ushort port; // port <= 6000 means disable
         ushort max; // max == 0 means all
 //        bool disable;
@@ -354,14 +355,14 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "s|seq",     format("The event is produced sequential this is only used in test mode: default %s", options.sequential), &(options.sequential),
         "stdout",    format("Set the stdout: default %s", options.stdout), &(options.stdout),
 
-        "script-ip",  format("Sets the listener ip address: default %s", options.scripting_engine.address), &(options.scripting_engine.address),
-        "script-port", format("Sets the listener port: default %d", options.scripting_engine.port), &(options.scripting_engine.port),
-        "script-queue", format("Sets the listener max queue lenght: default %d", options.scripting_engine.max_queue_length), &(options.scripting_engine.max_queue_length),
-        "script-maxcon",  format("Sets the maximum number of connections: default: %d", options.scripting_engine.max_connections), &(options.scripting_engine.max_connections),
-        "script-maxqueue",  format("Sets the maximum queue length: default: %d", options.scripting_engine.max_queue_length), &(options.scripting_engine.max_queue_length),
-        "script-maxfibres",  format("Sets the maximum number of fibres: default: %d", options.scripting_engine.max_number_of_accept_fibers), &(options.scripting_engine.max_number_of_accept_fibers),
-        "script-maxreuse",  format("Sets the maximum number of fibre reuse: default: %d", options.scripting_engine.max_number_of_fiber_reuse), &(options.scripting_engine.max_number_of_fiber_reuse),
-        "script-log",  format("Scripting engine log filename: default: %s", options.scripting_engine.name), &(options.scripting_engine.name),
+        "transaction-ip",  format("Sets the listener ip address: default %s", options.transaction.service.address), &(options.transaction.service.address),
+        "transaction-port", format("Sets the listener port: default %d", options.transaction.service.port), &(options.transaction.service.port),
+        "transaction-queue", format("Sets the listener max queue lenght: default %d", options.transaction.service.max_queue_length), &(options.transaction.service.max_queue_length),
+        "transaction-maxcon",  format("Sets the maximum number of connections: default: %d", options.transaction.service.max_connections), &(options.transaction.service.max_connections),
+        "transaction-maxqueue",  format("Sets the maximum queue length: default: %d", options.transaction.service.max_queue_length), &(options.transaction.service.max_queue_length),
+        "transaction-maxfibres",  format("Sets the maximum number of fibres: default: %d", options.transaction.service.max_number_of_accept_fibers), &(options.transaction.service.max_number_of_accept_fibers),
+        "transaction-maxreuse",  format("Sets the maximum number of fibre reuse: default: %d", options.transaction.service.max_number_of_fiber_reuse), &(options.transaction.service.max_number_of_fiber_reuse),
+        //   "transaction-log",  format("Scripting engine log filename: default: %s", options.transaction.service.name), &(options.transaction.service.name),
 
 
         "transcript-from", format("Transcript test from delay: default: %d", options.transcript.pause_from), &(options.transcript.pause_from),
@@ -398,20 +399,20 @@ static setDefaultOption(ref Options options) {
         task_name="heartbeat";
     }
     // Scripting
-    with(options.scripting_engine) {
-        address = "0.0.0.0";
-        port = 18_444;
-        max_queue_length = 100;
-        max_connections = 1000;
-        max_number_of_accept_fibers = 100;
-        min_duration_full_fibers_cycle_ms = 10;
-        max_number_of_fiber_reuse = 1000;
-        name="engine";
-        min_number_of_fibers = 10;
-        min_duration_for_accept_ms = 3000;
-        certificate = "pem_files/domain.pem";
-        private_key = "pem_files/domain.key.pem";
-    }
+    // with(options.transaction.service) {
+    //     address = "0.0.0.0";
+    //     port = 18_444;
+    //     max_queue_length = 100;
+    //     max_connections = 1000;
+    //     max_number_of_accept_fibers = 100;
+    //     min_duration_full_fibers_cycle_ms = 10;
+    //     max_number_of_fiber_reuse = 1000;
+    //     name="engine";
+    //     min_number_of_fibers = 10;
+    //     min_duration_for_accept_ms = 3000;
+    //     certificate = "pem_files/domain.pem";
+    //     private_key = "pem_files/domain.key.pem";
+    // }
     // Transcript
     with (options.transcript) {
         pause_from=333;
@@ -426,6 +427,20 @@ static setDefaultOption(ref Options options) {
         prefix="Transaction";
         task_name=prefix;
         timeout=250;
+        with(service) {
+            address = "0.0.0.0";
+            port = 18_444;
+            max_queue_length = 100;
+            max_connections = 1000;
+            max_number_of_accept_fibers = 100;
+            min_duration_full_fibers_cycle_ms = 10;
+            max_number_of_fiber_reuse = 1000;
+//            name="engine";
+            min_number_of_fibers = 10;
+            min_duration_for_accept_ms = 3000;
+            certificate = "pem_files/domain.pem";
+            private_key = "pem_files/domain.key.pem";
+        }
     }
     // Monitor
     with(options.monitor) {
