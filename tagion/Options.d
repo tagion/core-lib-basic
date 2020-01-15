@@ -222,6 +222,7 @@ struct Options {
         struct Synchronize{
             ulong maxSlaves;
             ulong maxMasters;
+            ulong masterPort;
             mixin JSONCommon;
         }
         Synchronize sync;
@@ -478,14 +479,15 @@ static setDefaultOption(ref Options options) {
         initialize = true;
         generate = true;
         synchronize = false;
-        setAngleFromPort = false;
         with(host){
             timeout = 3000;
             max_size = 1024 * 10;
         }
+        setAngleFromPort = false;
         with(sync){
             maxMasters = 1;
             maxSlaves = 4;
+            masterPort = 4030;
         }
     }
 //    setThreadLocalOptions();
