@@ -125,6 +125,7 @@ struct Options {
 
     struct SSLService {
         string task_name;
+        string prefix;
         string address;            /// Ip address
         ushort port;               /// Port
         uint   max_queue_length;   /// Listener max. incomming connection req. queue length
@@ -136,12 +137,6 @@ struct Options {
         uint   min_duration_full_fibers_cycle_ms; /// Min duration between a full call cycle for all fibers in milliseconds;
 
         uint   max_number_of_fiber_reuse;   /// Number of times to reuse a fiber
-
-        // string tmp_debug_dir;             /// Directory to dump hibon data
-
-        // string tmp_debug_bills_filename;  /// Name of bills file for debug hibon dump
-
-        // string name;                      /// Scripting engine name used for log filename etc.
 
         uint min_number_of_fibers;
         uint min_duration_for_accept_ms;
@@ -191,12 +186,10 @@ struct Options {
     struct Transaction {
         string task_name;
         string prefix;
-        //      string name;
         uint timeout;     /// Socket listerne timeout in msecs
         SSLService service;
-        ushort port; // port <= 6000 means disable
+//        ushort port; // port <= 6000 means disable
         ushort max; // max == 0 means all
-//        bool disable;
         mixin JSONCommon;
     }
 
@@ -253,9 +246,6 @@ struct Options {
 
 }
 
-// //__gshared protected static Options __gshared_options;
-// __gshared static Options __gshared_options;
-
 protected static Options options_memory;
 static immutable(Options*) options;
 
@@ -271,13 +261,6 @@ shared static this() {
 static void setOptions(ref const(Options) opt) {
     options_memory=opt;
 }
-
-// /++
-//  + Sets the thread local options to the value of __gshared_options
-//  +/
-// protected static void setThreadLocalOptions() {
-//     setOptions(__gshared_options);
-// }
 
 /++
 + Returns:
@@ -325,7 +308,7 @@ struct TransactionMiddlewareOptions {
 
 }
 
-__gshared static TransactionMiddlewareOptions transaction_middleware_options;
+//__gshared static TransactionMiddlewareOptions transaction_middleware_options;
 
 
 static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool overwrite_switch, ref scope Options options) {
@@ -347,16 +330,15 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "delay|d",   format("Sets delay: default: %d (ms)", options.delay), &(options.delay),
         "loops",     format("Sets the loop count (loops=0 runs forever): default %d", options.loops), &(options.loops),
         "url",       format("Sets the url: default %s", options.url), &(options.url),
-//        "noserv|n",  format("Disable monitor sockets: default %s", options.monitor.disable), &(options.monitor.disable),
         "sockets|M", format("Sets maximum number of monitors opened: default %s", options.monitor.max), &(options.monitor.max),
         "tmp",       format("Sets temporaty work directory: default '%s'", options.tmp), &(options.tmp),
         "monitor|P",    format("Sets first monitor port of the port sequency (port>=%d): default %d", options.min_port, options.monitor.port),  &(options.monitor.port),
-        "transaction|p",    format("Sets first transaction port of the port sequency (port>=%d): default %d", options.min_port, options.transaction.port),  &(options.transaction.port),
+        // "transaction|p",    format("Sets first transaction port of the port sequency (port>=%d): default %d", options.min_port, options.transaction.port),  &(options.transaction.port),
         "s|seq",     format("The event is produced sequential this is only used in test mode: default %s", options.sequential), &(options.sequential),
         "stdout",    format("Set the stdout: default %s", options.stdout), &(options.stdout),
 
         "transaction-ip",  format("Sets the listener ip address: default %s", options.transaction.service.address), &(options.transaction.service.address),
-        "transaction-port", format("Sets the listener port: default %d", options.transaction.service.port), &(options.transaction.service.port),
+        "transaction-port|p", format("Sets the listener port: default %d", options.transaction.service.port), &(options.transaction.service.port),
         "transaction-queue", format("Sets the listener max queue lenght: default %d", options.transaction.service.max_queue_length), &(options.transaction.service.max_queue_length),
         "transaction-maxcon",  format("Sets the maximum number of connections: default: %d", options.transaction.service.max_connections), &(options.transaction.service.max_connections),
         "transaction-maxqueue",  format("Sets the maximum queue length: default: %d", options.transaction.service.max_queue_length), &(options.transaction.service.max_queue_length),
@@ -398,44 +380,29 @@ static setDefaultOption(ref Options options) {
     with(options.heartbeat) {
         task_name="heartbeat";
     }
-    // Scripting
-    // with(options.transaction.service) {
-    //     address = "0.0.0.0";
-    //     port = 18_444;
-    //     max_queue_length = 100;
-    //     max_connections = 1000;
-    //     max_number_of_accept_fibers = 100;
-    //     min_duration_full_fibers_cycle_ms = 10;
-    //     max_number_of_fiber_reuse = 1000;
-    //     name="engine";
-    //     min_number_of_fibers = 10;
-    //     min_duration_for_accept_ms = 3000;
-    //     certificate = "pem_files/domain.pem";
-    //     private_key = "pem_files/domain.key.pem";
-    // }
     // Transcript
     with (options.transcript) {
         pause_from=333;
         pause_to=888;
-        prefix="Transcript";
+        prefix="transcript";
         task_name=prefix;
     }
     // Transaction
     with(options.transaction) {
-        port=10800;
+//        port=10800;
         max=0;
-        prefix="Transaction";
+        prefix="transaction";
         task_name=prefix;
         timeout=250;
         with(service) {
+            prefix="transervice";
             address = "0.0.0.0";
-            port = 18_444;
+            port = 10_800;
             max_queue_length = 100;
             max_connections = 1000;
             max_number_of_accept_fibers = 100;
             min_duration_full_fibers_cycle_ms = 10;
             max_number_of_fiber_reuse = 1000;
-//            name="engine";
             min_number_of_fibers = 10;
             min_duration_for_accept_ms = 3000;
             certificate = "pem_files/domain.pem";
@@ -446,7 +413,7 @@ static setDefaultOption(ref Options options) {
     with(options.monitor) {
         port=10900;
         max=0;
-        prefix="Monitor";
+        prefix="monitor";
         task_name=prefix;
         timeout=500;
     }
@@ -455,5 +422,4 @@ static setDefaultOption(ref Options options) {
         task_name="tagion.logger";
         file_name="/tmp/tagion.log";
     }
-//    setThreadLocalOptions();
 }
