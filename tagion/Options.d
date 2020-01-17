@@ -140,10 +140,11 @@ struct Options {
 
         uint min_number_of_fibers;
         uint min_duration_for_accept_ms;
-
+        uint select_timeout;                     /// Select timeout in ms
         string certificate;                      /// Certificate file name
         string private_key;                      /// Private key
 
+        string name;
         uint max_accept_call_tries() const pure {
             const tries = min_duration_for_accept_ms / min_duration_full_fibers_cycle_ms;
             return tries > 1 ? tries : 2;
@@ -330,6 +331,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "delay|d",   format("Sets delay: default: %d (ms)", options.delay), &(options.delay),
         "loops",     format("Sets the loop count (loops=0 runs forever): default %d", options.loops), &(options.loops),
         "url",       format("Sets the url: default %s", options.url), &(options.url),
+//        "noserv|n",  format("Disable monitor sockets: default %s", options.monitor.disable), &(options.monitor.disable),
         "sockets|M", format("Sets maximum number of monitors opened: default %s", options.monitor.max), &(options.monitor.max),
         "tmp",       format("Sets temporaty work directory: default '%s'", options.tmp), &(options.tmp),
         "monitor|P",    format("Sets first monitor port of the port sequency (port>=%d): default %d", options.min_port, options.monitor.port),  &(options.monitor.port),
@@ -398,6 +400,7 @@ static setDefaultOption(ref Options options) {
             prefix="transervice";
             address = "0.0.0.0";
             port = 10_800;
+            select_timeout=300;
             max_queue_length = 100;
             max_connections = 1000;
             max_number_of_accept_fibers = 100;
@@ -422,4 +425,5 @@ static setDefaultOption(ref Options options) {
         task_name="tagion.logger";
         file_name="/tmp/tagion.log";
     }
+//    setThreadLocalOptions();
 }
