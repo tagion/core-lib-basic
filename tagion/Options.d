@@ -212,6 +212,7 @@ struct Options {
         bool generate;
         bool synchronize;
         bool setAngleFromPort;
+        bool request;
         struct Host{
             ulong timeout;
             uint max_size;
@@ -223,6 +224,8 @@ struct Options {
             ulong maxSlaves;
             ulong maxMasters;
             ulong masterPort;
+            ushort netFromAng;
+            ushort netToAng;
             mixin JSONCommon;
         }
         Synchronize sync;
@@ -393,6 +396,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "dart-generate", "Generate block file", &(options.dart.generate),
         "dart-from", "Dart from angle", &(options.dart.fromAng),
         "dart-to", "Dart to angle", &(options.dart.toAng),
+        "dart-request", "Request dart data", &(options.dart.request),
 //        "help!h", "Display the help text",    &help_switch,
         );
 };
@@ -479,6 +483,7 @@ static setDefaultOption(ref Options options) {
         initialize = true;
         generate = true;
         synchronize = false;
+        request = false;
         with(host){
             timeout = 3000;
             max_size = 1024 * 10;
@@ -488,6 +493,8 @@ static setDefaultOption(ref Options options) {
             maxMasters = 1;
             maxSlaves = 4;
             masterPort = 4030;
+            netFromAng = 0;
+            netToAng = 100;
         }
     }
 //    setThreadLocalOptions();
