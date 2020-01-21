@@ -89,6 +89,12 @@ mixin template JSONCommon() {
 }
 
 struct Options {
+    struct Host{
+        ulong timeout;
+        uint max_size;
+        mixin JSONCommon;
+    }
+
     uint nodes;     /// Number of concurrent nodes (Test mode)
 
     uint seed;             /// Random seed for pseudo random sequency (Test mode)
@@ -201,6 +207,7 @@ struct Options {
 
     struct DART {
         string task_name;
+        string protocol_id;
         string name;
         string prefix;
         string path;
@@ -213,22 +220,44 @@ struct Options {
         bool synchronize;
         bool setAngleFromPort;
         bool request;
-        struct Host{
-            ulong timeout;
-            uint max_size;
-            mixin JSONCommon;
-        }
-        Host host;
-        
+
         struct Synchronize{
             ulong maxSlaves;
             ulong maxMasters;
-            ulong masterPort;
+            ulong maxSlavePort;
             ushort netFromAng;
             ushort netToAng;
+            ulong tickTimeout;
+            string task_name;
+            string protocol_id;
+
+            Host host;
             mixin JSONCommon;
         }
         Synchronize sync;
+
+        struct Mdns{
+            string protocol_id;
+            string task_name;
+            Host host;
+            ulong delay_before_start;
+            mixin JSONCommon;   
+        }
+        Mdns mdns;
+
+        struct Subscribe{
+            ulong masterPort;
+            Host host;
+            string task_name;
+            mixin JSONCommon;
+        }
+        Subscribe subs;
+
+        struct Commands{
+            ulong read_timeout;
+            mixin JSONCommon;
+        }
+        Commands commands;
 
         mixin JSONCommon;
     }
@@ -389,11 +418,11 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "transcript-to", format("Transcript test to delay: default: %d", options.transcript.pause_to), &(options.transcript.pause_to),
         "transcript-log",  format("Transcript log filename: default: %s", options.transcript.task_name), &(options.transcript.task_name),
 
-        "syncDart", "Need synchronization", &(options.dart.synchronize),
-        "setAngleFromPort", "Set dart from/to angle based on port", &(options.dart.setAngleFromPort),
+        "dart-synchronize", "Need synchronization", &(options.dart.synchronize),
+        "dart-setAngleFromPort", "Set dart from/to angle based on port", &(options.dart.setAngleFromPort),
         
         "dart-init", "Initialize block file", &(options.dart.initialize),
-        "dart-generate", "Generate block file", &(options.dart.generate),
+        "dart-generate", "Generate dart with random data", &(options.dart.generate),
         "dart-from", "Dart from angle", &(options.dart.fromAng),
         "dart-to", "Dart to angle", &(options.dart.toAng),
         "dart-request", "Request dart data", &(options.dart.request),
@@ -472,29 +501,57 @@ static setDefaultOption(ref Options options) {
 
     // DART
     with(options.dart) {
-        task_name = "dartsync";
+        task_name = "tagion_dart_tid";
+        protocol_id  = "tagion_dart_pid";
         name= "dart";
         prefix ="dart_";
         path="/usr/tmp/";
-        fromAng=5;
-        toAng=10;
-        ringWidth = 1;
+        fromAng=0;
+        toAng=50;
+        ringWidth = 3;
         rings = 3;
         initialize = true;
         generate = true;
         synchronize = false;
         request = false;
-        with(host){
-            timeout = 3000;
-            max_size = 1024 * 10;
-        }
         setAngleFromPort = false;
         with(sync){
             maxMasters = 1;
             maxSlaves = 4;
-            masterPort = 4030;
+            maxSlavePort = 4020;
             netFromAng = 0;
-            netToAng = 100;
+            netToAng = 50;
+            tickTimeout = 50;
+            protocol_id = "tagion_dart_sync_pid";
+            task_name = "tagion_dart_sync_tid";
+
+            with(host){
+                timeout = 3_000;
+                max_size = 1024 * 10;
+            }
+        }
+
+        with(mdns){
+            protocol_id = "tagion_dart_mdns_pid";
+            task_name = "tagion_dart_mdns_tid";
+            delay_before_start = 1000;
+            with(host){
+                timeout = 3000;
+                max_size = 1024 * 10;
+            }
+        }
+
+        with(subs){
+            masterPort = 4030;
+            task_name = "tagion_dart_subs_tid";
+            with(host){
+                timeout = 3_000_000;
+                max_size = 1024 * 100;
+            }
+        }
+
+        with(commands){
+            read_timeout = 10_000;
         }
     }
 //    setThreadLocalOptions();
