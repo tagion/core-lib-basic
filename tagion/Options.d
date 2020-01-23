@@ -140,23 +140,23 @@ struct Options {
 
         uint   max_connections;             /// Max simultanious connections for the scripting engine
 
-        uint   max_number_of_accept_fibers;        /// Max simultanious fibers for accepting incomming SSL connections.
+//        uint   max_number_of_accept_fibers;        /// Max simultanious fibers for accepting incomming SSL connections.
 
-        uint   min_duration_full_fibers_cycle_ms; /// Min duration between a full call cycle for all fibers in milliseconds;
+//        uint   min_duration_full_fibers_cycle_ms; /// Min duration between a full call cycle for all fibers in milliseconds;
 
         uint   max_number_of_fiber_reuse;   /// Number of times to reuse a fiber
 
         uint min_number_of_fibers;
-        uint min_duration_for_accept_ms;
+//        uint min_duration_for_accept_ms;
         uint select_timeout;                     /// Select timeout in ms
         string certificate;                      /// Certificate file name
         string private_key;                      /// Private key
         uint client_timeout;                     /// Client timeout
         string name;
-        uint max_accept_call_tries() const pure {
-            const tries = min_duration_for_accept_ms / min_duration_full_fibers_cycle_ms;
-            return tries > 1 ? tries : 2;
-        }
+        // uint max_accept_call_tries() const pure {
+        //     const tries = min_duration_for_accept_ms / min_duration_full_fibers_cycle_ms;
+        //     return tries > 1 ? tries : 2;
+        // }
 
         mixin JSONCommon;
     }
@@ -398,7 +398,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "transaction-queue", format("Sets the listener max queue lenght: default %d", options.transaction.service.max_queue_length), &(options.transaction.service.max_queue_length),
         "transaction-maxcon",  format("Sets the maximum number of connections: default: %d", options.transaction.service.max_connections), &(options.transaction.service.max_connections),
         "transaction-maxqueue",  format("Sets the maximum queue length: default: %d", options.transaction.service.max_queue_length), &(options.transaction.service.max_queue_length),
-        "transaction-maxfibres",  format("Sets the maximum number of fibres: default: %d", options.transaction.service.max_number_of_accept_fibers), &(options.transaction.service.max_number_of_accept_fibers),
+//        "transaction-maxfibres",  format("Sets the maximum number of fibres: default: %d", options.transaction.service.max_number_of_accept_fibers), &(options.transaction.service.max_number_of_accept_fibers),
         "transaction-maxreuse",  format("Sets the maximum number of fibre reuse: default: %d", options.transaction.service.max_number_of_fiber_reuse), &(options.transaction.service.max_number_of_fiber_reuse),
         //   "transaction-log",  format("Scripting engine log filename: default: %s", options.transaction.service.name), &(options.transaction.service.name),
 
@@ -469,11 +469,11 @@ static setDefaultOption(ref Options options) {
             max_buffer_size = 0x4000;
             max_queue_length = 100;
             max_connections = 1000;
-            max_number_of_accept_fibers = 100;
-            min_duration_full_fibers_cycle_ms = 10;
+            // max_number_of_accept_fibers = 100;
+            // min_duration_full_fibers_cycle_ms = 10;
             max_number_of_fiber_reuse = 1000;
             min_number_of_fibers = 10;
-            min_duration_for_accept_ms = 3000;
+//            min_duration_for_accept_ms = 3000;
             certificate = "pem_files/domain.pem";
             private_key = "pem_files/domain.key.pem";
         }
