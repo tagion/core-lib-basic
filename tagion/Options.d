@@ -120,7 +120,7 @@ struct Options {
     uint node_id;          /// This is use to set the node_id in emulator mode in normal node this is allways 0
     string node_name;      /// Name of the node
     ulong port;
-    ulong portBase;
+    ulong port_base;
     ushort min_port;       /// Minum value of the port number
     mixin JSONCommon;
 
@@ -211,8 +211,8 @@ struct Options {
         string name;
         string prefix;
         string path;
-        ushort fromAng;
-        ushort toAng;
+        ushort from_ang;
+        ushort to_ang;
         ubyte ringWidth;
         int rings;
         bool initialize;
@@ -270,6 +270,8 @@ struct Options {
     struct Logger {
         string task_name;
         string file_name;
+        bool flush;
+        bool to_console;
         mixin JSONCommon;
     }
 
@@ -426,9 +428,10 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         
         "dart-init", "Initialize block file", &(options.dart.initialize),
         "dart-generate", "Generate dart with random data", &(options.dart.generate),
-        "dart-from", "Dart from angle", &(options.dart.fromAng),
-        "dart-to", "Dart to angle", &(options.dart.toAng),
+        "dart-from", "Dart from angle", &(options.dart.from_ang),
+        "dart-to", "Dart to angle", &(options.dart.to_ang),
         "dart-request", "Request dart data", &(options.dart.request),
+        "logger-filename" , format("Logger file name: default: %s", options.logger.file_name), &(options.logger.file_name)
 //        "help!h", "Display the help text",    &help_switch,
         );
 };
@@ -438,7 +441,7 @@ static setDefaultOption(ref Options options) {
     with(options) {
         nodeprefix="Node";
         port = 4001;
-        portBase = 4000;
+        port_base = 4000;
         logext="log";
         seed=42;
         delay=200;
@@ -500,6 +503,8 @@ static setDefaultOption(ref Options options) {
     with(options.logger) {
         task_name="tagion.logger";
         file_name="/tmp/tagion.log";
+        flush=true;
+        to_console=true;
     }
 
     // DART
@@ -509,8 +514,8 @@ static setDefaultOption(ref Options options) {
         name= "dart";
         prefix ="dart_";
         path="/usr/tmp/";
-        fromAng=0;
-        toAng=50;
+        from_ang=0;
+        to_ang=50;
         ringWidth = 3;
         rings = 3;
         initialize = true;
@@ -529,7 +534,7 @@ static setDefaultOption(ref Options options) {
             task_name = "tagion_dart_sync_tid";
 
             attempts = 20;
-            
+
             with(host){
                 timeout = 3_000;
                 max_size = 1024 * 10;
