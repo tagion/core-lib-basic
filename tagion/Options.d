@@ -120,7 +120,7 @@ struct Options {
     uint node_id;          /// This is use to set the node_id in emulator mode in normal node this is allways 0
     string node_name;      /// Name of the node
     ulong port;
-    ulong portBase;
+    ulong port_base;
     ushort min_port;       /// Minum value of the port number
     mixin JSONCommon;
 
@@ -130,38 +130,38 @@ struct Options {
     }
     Heatbeat heartbeat;
 
-    struct SSLService {
+    struct ScriptingEngine {
         string task_name;
-        string prefix;
-        string address;            /// Ip address
-        ushort port;               /// Port
-        uint   max_buffer_size;    /// Max buffer size
-        uint   max_queue_length;   /// Listener max. incomming connection req. queue length
+        string listener_ip_address;       /// Ip address
+        ushort listener_port;             /// Port
+        uint listener_max_queue_length;   /// Listener max. incomming connection req. queue length
 
-        uint   max_connections;             /// Max simultanious connections for the scripting engine
+        uint max_connections;             /// Max simultanious connections for the scripting engine
 
-//        uint   max_number_of_accept_fibers;        /// Max simultanious fibers for accepting incomming SSL connections.
+        uint max_number_of_accept_fibers;        /// Max simultanious fibers for accepting incomming SSL connections.
 
-//        uint   min_duration_full_fibers_cycle_ms; /// Min duration between a full call cycle for all fibers in milliseconds;
+        uint min_duration_full_fibers_cycle_ms; /// Min duration between a full call cycle for all fibers in milliseconds;
 
-        uint   max_number_of_fiber_reuse;   /// Number of times to reuse a fiber
+        uint max_number_of_fiber_reuse;   /// Number of times to reuse a fiber
+
+        string tmp_debug_dir;             /// Directory to dump hibon data
+
+        string tmp_debug_bills_filename;  /// Name of bills file for debug hibon dump
+
+        string name;                      /// Scripting engine name used for log filename etc.
 
         uint min_number_of_fibers;
-//        uint min_duration_for_accept_ms;
-        uint select_timeout;                     /// Select timeout in ms
-        string certificate;                      /// Certificate file name
-        string private_key;                      /// Private key
-        uint client_timeout;                     /// Client timeout
-        string name;
-        // uint max_accept_call_tries() const pure {
-        //     const tries = min_duration_for_accept_ms / min_duration_full_fibers_cycle_ms;
-        //     return tries > 1 ? tries : 2;
-        // }
+        uint min_duration_for_accept_ms;
+
+        uint max_accept_call_tries() const pure {
+            const tries = min_duration_for_accept_ms / min_duration_full_fibers_cycle_ms;
+            return tries > 1 ? tries : 2;
+        }
 
         mixin JSONCommon;
     }
 
-    //SSLService scripting_engine;
+    ScriptingEngine scripting_engine;
 
     struct Transcript {
         string task_name;
@@ -195,10 +195,11 @@ struct Options {
     struct Transaction {
         string task_name;
         string prefix;
+        //      string name;
         uint timeout;     /// Socket listerne timeout in msecs
-        SSLService service;
-//        ushort port; // port <= 6000 means disable
+        ushort port; // port <= 6000 means disable
         ushort max; // max == 0 means all
+//        bool disable;
         mixin JSONCommon;
     }
 
@@ -210,14 +211,14 @@ struct Options {
         string name;
         string prefix;
         string path;
-        ushort fromAng;
-        ushort toAng;
+        ushort from_ang;
+        ushort to_ang;
         ubyte ringWidth;
         int rings;
         bool initialize;
         bool generate;
         bool synchronize;
-        bool setAngleFromPort;
+        bool angle_from_port;
         bool request;
 
         struct Synchronize{
@@ -230,6 +231,10 @@ struct Options {
             string task_name;
             string protocol_id;
 
+            uint attempts;
+
+            bool master_angle_from_port;
+
             Host host;
             mixin JSONCommon;
         }
@@ -240,7 +245,8 @@ struct Options {
             string task_name;
             Host host;
             ulong delay_before_start;
-            mixin JSONCommon;
+            ulong interval;
+            mixin JSONCommon;   
         }
         Mdns mdns;
 
@@ -266,6 +272,8 @@ struct Options {
     struct Logger {
         string task_name;
         string file_name;
+        bool flush;
+        bool to_console;
         mixin JSONCommon;
     }
 
@@ -301,6 +309,9 @@ struct Options {
 
 }
 
+// //__gshared protected static Options __gshared_options;
+// __gshared static Options __gshared_options;
+
 protected static Options options_memory;
 static immutable(Options*) options;
 
@@ -316,6 +327,13 @@ shared static this() {
 static void setOptions(ref const(Options) opt) {
     options_memory=opt;
 }
+
+// /++
+//  + Sets the thread local options to the value of __gshared_options
+//  +/
+// protected static void setThreadLocalOptions() {
+//     setOptions(__gshared_options);
+// }
 
 /++
 + Returns:
@@ -363,7 +381,7 @@ struct TransactionMiddlewareOptions {
 
 }
 
-//__gshared static TransactionMiddlewareOptions transaction_middleware_options;
+__gshared static TransactionMiddlewareOptions transaction_middleware_options;
 
 
 static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool overwrite_switch, ref scope Options options) {
@@ -389,18 +407,18 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "sockets|M", format("Sets maximum number of monitors opened: default %s", options.monitor.max), &(options.monitor.max),
         "tmp",       format("Sets temporaty work directory: default '%s'", options.tmp), &(options.tmp),
         "monitor|P",    format("Sets first monitor port of the port sequency (port>=%d): default %d", options.min_port, options.monitor.port),  &(options.monitor.port),
-        // "transaction|p",    format("Sets first transaction port of the port sequency (port>=%d): default %d", options.min_port, options.transaction.port),  &(options.transaction.port),
+        "transaction|p",    format("Sets first transaction port of the port sequency (port>=%d): default %d", options.min_port, options.transaction.port),  &(options.transaction.port),
         "s|seq",     format("The event is produced sequential this is only used in test mode: default %s", options.sequential), &(options.sequential),
         "stdout",    format("Set the stdout: default %s", options.stdout), &(options.stdout),
 
-        "transaction-ip",  format("Sets the listener ip address: default %s", options.transaction.service.address), &(options.transaction.service.address),
-        "transaction-port|p", format("Sets the listener port: default %d", options.transaction.service.port), &(options.transaction.service.port),
-        "transaction-queue", format("Sets the listener max queue lenght: default %d", options.transaction.service.max_queue_length), &(options.transaction.service.max_queue_length),
-        "transaction-maxcon",  format("Sets the maximum number of connections: default: %d", options.transaction.service.max_connections), &(options.transaction.service.max_connections),
-        "transaction-maxqueue",  format("Sets the maximum queue length: default: %d", options.transaction.service.max_queue_length), &(options.transaction.service.max_queue_length),
-//        "transaction-maxfibres",  format("Sets the maximum number of fibres: default: %d", options.transaction.service.max_number_of_accept_fibers), &(options.transaction.service.max_number_of_accept_fibers),
-        "transaction-maxreuse",  format("Sets the maximum number of fibre reuse: default: %d", options.transaction.service.max_number_of_fiber_reuse), &(options.transaction.service.max_number_of_fiber_reuse),
-        //   "transaction-log",  format("Scripting engine log filename: default: %s", options.transaction.service.name), &(options.transaction.service.name),
+        "script-ip",  format("Sets the listener ip address: default %s", options.scripting_engine.listener_ip_address), &(options.scripting_engine.listener_ip_address),
+        "script-port", format("Sets the listener port: default %d", options.scripting_engine.listener_port), &(options.scripting_engine.listener_port),
+        "script-queue", format("Sets the listener max queue lenght: default %d", options.scripting_engine.listener_max_queue_length), &(options.scripting_engine.listener_max_queue_length),
+        "script-maxcon",  format("Sets the maximum number of connections: default: %d", options.scripting_engine.max_connections), &(options.scripting_engine.max_connections),
+        "script-maxqueue",  format("Sets the maximum queue length: default: %d", options.scripting_engine.listener_max_queue_length), &(options.scripting_engine.listener_max_queue_length),
+        "script-maxfibres",  format("Sets the maximum number of fibres: default: %d", options.scripting_engine.max_number_of_accept_fibers), &(options.scripting_engine.max_number_of_accept_fibers),
+        "script-maxreuse",  format("Sets the maximum number of fibre reuse: default: %d", options.scripting_engine.max_number_of_fiber_reuse), &(options.scripting_engine.max_number_of_fiber_reuse),
+        "script-log",  format("Scripting engine log filename: default: %s", options.scripting_engine.name), &(options.scripting_engine.name),
 
 
         "transcript-from", format("Transcript test from delay: default: %d", options.transcript.pause_from), &(options.transcript.pause_from),
@@ -408,13 +426,15 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "transcript-log",  format("Transcript log filename: default: %s", options.transcript.task_name), &(options.transcript.task_name),
 
         "dart-synchronize", "Need synchronization", &(options.dart.synchronize),
-        "dart-setAngleFromPort", "Set dart from/to angle based on port", &(options.dart.setAngleFromPort),
-
+        "dart-angle-from-port", "Set dart from/to angle based on port", &(options.dart.angle_from_port),
+        "dart-master-angle-from-port", "Master angle based on port ", &(options.dart.sync.master_angle_from_port),
+        
         "dart-init", "Initialize block file", &(options.dart.initialize),
         "dart-generate", "Generate dart with random data", &(options.dart.generate),
-        "dart-from", "Dart from angle", &(options.dart.fromAng),
-        "dart-to", "Dart to angle", &(options.dart.toAng),
+        "dart-from", "Dart from angle", &(options.dart.from_ang),
+        "dart-to", "Dart to angle", &(options.dart.to_ang),
         "dart-request", "Request dart data", &(options.dart.request),
+        "logger-filename" , format("Logger file name: default: %s", options.logger.file_name), &(options.logger.file_name)
 //        "help!h", "Display the help text",    &help_switch,
         );
 };
@@ -424,7 +444,7 @@ static setDefaultOption(ref Options options) {
     with(options) {
         nodeprefix="Node";
         port = 4001;
-        portBase = 4000;
+        port_base = 4000;
         logext="log";
         seed=42;
         delay=200;
@@ -446,43 +466,39 @@ static setDefaultOption(ref Options options) {
     with(options.heartbeat) {
         task_name="heartbeat";
     }
+    // Scripting
+    with(options.scripting_engine) {
+        listener_ip_address = "0.0.0.0";
+        listener_port = 18_444;
+        listener_max_queue_length = 100;
+        max_connections = 1000;
+        max_number_of_accept_fibers = 100;
+        min_duration_full_fibers_cycle_ms = 10;
+        max_number_of_fiber_reuse = 1000;
+        name="engine";
+        min_number_of_fibers = 10;
+        min_duration_for_accept_ms = 3000;
+    }
     // Transcript
     with (options.transcript) {
         pause_from=333;
         pause_to=888;
-        prefix="transcript";
+        prefix="Transcript";
         task_name=prefix;
     }
     // Transaction
     with(options.transaction) {
-//        port=10800;
+        port=10800;
         max=0;
-        prefix="transaction";
+        prefix="Transaction";
         task_name=prefix;
         timeout=250;
-        with(service) {
-            prefix="transervice";
-            address = "0.0.0.0";
-            port = 10_800;
-            select_timeout=300;
-            client_timeout=4000; // msecs
-            max_buffer_size = 0x4000;
-            max_queue_length = 100;
-            max_connections = 1000;
-            // max_number_of_accept_fibers = 100;
-            // min_duration_full_fibers_cycle_ms = 10;
-            max_number_of_fiber_reuse = 1000;
-            min_number_of_fibers = 10;
-//            min_duration_for_accept_ms = 3000;
-            certificate = "pem_files/domain.pem";
-            private_key = "pem_files/domain.key.pem";
-        }
     }
     // Monitor
     with(options.monitor) {
         port=10900;
         max=0;
-        prefix="monitor";
+        prefix="Monitor";
         task_name=prefix;
         timeout=500;
     }
@@ -490,6 +506,8 @@ static setDefaultOption(ref Options options) {
     with(options.logger) {
         task_name="tagion.logger";
         file_name="/tmp/tagion.log";
+        flush=true;
+        to_console=true;
     }
 
     // DART
@@ -499,15 +517,15 @@ static setDefaultOption(ref Options options) {
         name= "dart";
         prefix ="dart_";
         path="/usr/tmp/";
-        fromAng=0;
-        toAng=50;
+        from_ang=0;
+        to_ang=50;
         ringWidth = 3;
         rings = 3;
         initialize = true;
         generate = true;
         synchronize = false;
         request = false;
-        setAngleFromPort = false;
+        angle_from_port = false;
         with(sync){
             maxMasters = 1;
             maxSlaves = 4;
@@ -518,6 +536,10 @@ static setDefaultOption(ref Options options) {
             protocol_id = "tagion_dart_sync_pid";
             task_name = "tagion_dart_sync_tid";
 
+            attempts = 20;
+
+            master_angle_from_port = false;
+
             with(host){
                 timeout = 3_000;
                 max_size = 1024 * 10;
@@ -527,7 +549,8 @@ static setDefaultOption(ref Options options) {
         with(mdns){
             protocol_id = "tagion_dart_mdns_pid";
             task_name = "tagion_dart_mdns_tid";
-            delay_before_start = 1000;
+            delay_before_start = 5000;
+            interval = 400;
             with(host){
                 timeout = 3000;
                 max_size = 1024 * 10;
