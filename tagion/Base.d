@@ -51,7 +51,7 @@ alias HashPointer=Typedef!(Buffer, null, BufferType.HASHPOINTER.stringof);
 
 //template isBufferType(T) {
 //    alias isBuffer=true;
-enum isBufferType(T)=is(T : immutable(ubyte[]) ) || is(TypedefType!T : immutable(ubyte[]) );
+enum isBufferType(T)=is(T : const(ubyte[]) ) || is(TypedefType!T : const(ubyte[]) );
 
 static unittest {
     static assert(isBufferType!(immutable(ubyte[])));
