@@ -233,6 +233,7 @@ struct Options {
             uint attempts;
 
             bool master_angle_from_port;
+            uint max_handlers;
 
             Host host;
             mixin JSONCommon;
@@ -532,6 +533,8 @@ static setDefaultOption(ref Options options) {
             attempts = 20;
 
             master_angle_from_port = false;
+
+            max_handlers = 20;
 
             with(host){
                 timeout = 3_000;
