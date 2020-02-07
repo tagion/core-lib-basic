@@ -226,7 +226,8 @@ struct Options {
             ulong maxSlavePort;
             ushort netFromAng;
             ushort netToAng;
-            ulong tickTimeout;
+            ulong tick_timeout;
+            ulong replay_tick_timeout;
             string task_name;
             string protocol_id;
 
@@ -526,7 +527,8 @@ static setDefaultOption(ref Options options) {
             maxSlavePort = 4020;
             netFromAng = 0;
             netToAng = 50;
-            tickTimeout = 50;
+            tick_timeout = 50;
+            replay_tick_timeout = 5;
             protocol_id = "tagion_dart_sync_pid";
             task_name = "tagion_dart_sync_tid";
 
