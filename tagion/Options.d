@@ -256,7 +256,8 @@ struct Options {
         struct Subscribe{
             ulong masterPort;
             Host host;
-            string task_name;
+            string master_task_name;
+            string slave_task_name;
             string protocol_id;
             ulong tick_timeout;
             mixin JSONCommon;
@@ -429,6 +430,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "dart-from", "Dart from angle", &(options.dart.from_ang),
         "dart-to", "Dart to angle", &(options.dart.to_ang),
         "dart-request", "Request dart data", &(options.dart.request),
+        "dart-path", "Path to dart file", &(options.dart.path),
         "logger-filename" , format("Logger file name: default: %s", options.logger.file_name), &(options.logger.file_name)
 //        "help!h", "Display the help text",    &help_switch,
         );
@@ -519,7 +521,7 @@ static setDefaultOption(ref Options options) {
         }
         name= "dart";
         prefix ="dart_";
-        path="/usr/tmp/";
+        path="";
         from_ang=0;
         to_ang=50;
         ringWidth = 3;
@@ -566,7 +568,8 @@ static setDefaultOption(ref Options options) {
 
         with(subs){
             masterPort = 4030;
-            task_name = "tagion_dart_subs_tid";
+            master_task_name = "tagion_dart_subs_master_tid";
+            slave_task_name = "tagion_dart_subs_slave_tid";
             protocol_id = "tagion_dart_subs_pid";
             tick_timeout = 500;
             with(host){
