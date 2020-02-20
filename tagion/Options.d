@@ -519,14 +519,14 @@ static setDefaultOption(ref Options options) {
         }
         name= "dart";
         prefix ="dart_";
-        path="/usr/tmp/";
+        path="dart.drt";
         from_ang=0;
-        to_ang=50;
+        to_ang=0;
         ringWidth = 3;
         rings = 3;
         initialize = true;
-        generate = true;
-        synchronize = false;
+        generate = false;
+        synchronize = true;
         request = false;
         angle_from_port = false;
         tick_timeout = 500;
@@ -535,7 +535,11 @@ static setDefaultOption(ref Options options) {
             maxSlaves = 4;
             maxSlavePort = 4020;
             netFromAng = 0;
+<<<<<<< HEAD
             netToAng = 50;
+=======
+            netToAng = 0;
+>>>>>>> e38f72a13c77115eacaa67cb71b485a4bff6d14a
             tick_timeout = 50;
             replay_tick_timeout = 5;
             protocol_id = "tagion_dart_sync_pid";
