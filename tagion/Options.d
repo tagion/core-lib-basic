@@ -207,6 +207,7 @@ struct Options {
     struct DART {
         string task_name;
         string protocol_id;
+        Host host;
         string name;
         string prefix;
         string path;
@@ -219,6 +220,7 @@ struct Options {
         bool synchronize;
         bool angle_from_port;
         bool request;
+        ulong tick_timeout;
 
         struct Synchronize{
             ulong maxSlaves;
@@ -226,7 +228,8 @@ struct Options {
             ulong maxSlavePort;
             ushort netFromAng;
             ushort netToAng;
-            ulong tickTimeout;
+            ulong tick_timeout;
+            ulong replay_tick_timeout;
             string task_name;
             string protocol_id;
 
@@ -246,7 +249,7 @@ struct Options {
             Host host;
             ulong delay_before_start;
             ulong interval;
-            mixin JSONCommon;   
+            mixin JSONCommon;
         }
         Mdns mdns;
 
@@ -254,6 +257,8 @@ struct Options {
             ulong masterPort;
             Host host;
             string task_name;
+            string protocol_id;
+            ulong tick_timeout;
             mixin JSONCommon;
         }
         Subscribe subs;
@@ -418,7 +423,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "dart-synchronize", "Need synchronization", &(options.dart.synchronize),
         "dart-angle-from-port", "Set dart from/to angle based on port", &(options.dart.angle_from_port),
         "dart-master-angle-from-port", "Master angle based on port ", &(options.dart.sync.master_angle_from_port),
-        
+
         "dart-init", "Initialize block file", &(options.dart.initialize),
         "dart-generate", "Generate dart with random data", &(options.dart.generate),
         "dart-from", "Dart from angle", &(options.dart.from_ang),
@@ -508,25 +513,31 @@ static setDefaultOption(ref Options options) {
     with(options.dart) {
         task_name = "tagion_dart_tid";
         protocol_id  = "tagion_dart_pid";
+        with(host){
+            timeout = 3000;
+            max_size = 1024 * 10;
+        }
         name= "dart";
         prefix ="dart_";
-        path="/usr/tmp/";
+        path="dart.drt";
         from_ang=0;
-        to_ang=50;
+        to_ang=0;
         ringWidth = 3;
         rings = 3;
         initialize = true;
-        generate = true;
-        synchronize = false;
+        generate = false;
+        synchronize = true;
         request = false;
         angle_from_port = false;
+        tick_timeout = 500;
         with(sync){
             maxMasters = 1;
             maxSlaves = 4;
             maxSlavePort = 4020;
             netFromAng = 0;
-            netToAng = 50;
-            tickTimeout = 50;
+            netToAng = 0;
+            tick_timeout = 50;
+            replay_tick_timeout = 5;
             protocol_id = "tagion_dart_sync_pid";
             task_name = "tagion_dart_sync_tid";
 
@@ -556,6 +567,8 @@ static setDefaultOption(ref Options options) {
         with(subs){
             masterPort = 4030;
             task_name = "tagion_dart_subs_tid";
+            protocol_id = "tagion_dart_subs_pid";
+            tick_timeout = 500;
             with(host){
                 timeout = 3_000_000;
                 max_size = 1024 * 100;
