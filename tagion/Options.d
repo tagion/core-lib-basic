@@ -197,6 +197,7 @@ struct Options {
         string prefix;
         uint timeout;     /// Socket listerne timeout in msecs
         SSLService service;
+
 //        ushort port; // port <= 6000 means disable
         ushort max; // max == 0 means all
         mixin JSONCommon;
