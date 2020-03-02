@@ -197,6 +197,7 @@ struct Options {
         string prefix;
         uint timeout;     /// Socket listerne timeout in msecs
         SSLService service;
+
 //        ushort port; // port <= 6000 means disable
         ushort max; // max == 0 means all
         mixin JSONCommon;
@@ -421,6 +422,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "transcript-to", format("Transcript test to delay: default: %d", options.transcript.pause_to), &(options.transcript.pause_to),
         "transcript-log",  format("Transcript log filename: default: %s", options.transcript.task_name), &(options.transcript.task_name),
 
+        "dart-filename", format("Dart file name. Default: %s", options.dart.path), &(options.dart.path),
         "dart-synchronize", "Need synchronization", &(options.dart.synchronize),
         "dart-angle-from-port", "Set dart from/to angle based on port", &(options.dart.angle_from_port),
         "dart-master-angle-from-port", "Master angle based on port ", &(options.dart.sync.master_angle_from_port),
@@ -523,12 +525,12 @@ static setDefaultOption(ref Options options) {
         prefix ="dart_";
         path="";
         from_ang=0;
-        to_ang=50;
+        to_ang=0;
         ringWidth = 3;
         rings = 3;
         initialize = true;
-        generate = true;
-        synchronize = false;
+        generate = false;
+        synchronize = true;
         request = false;
         angle_from_port = false;
         tick_timeout = 500;
@@ -537,7 +539,7 @@ static setDefaultOption(ref Options options) {
             maxSlaves = 4;
             maxSlavePort = 4020;
             netFromAng = 0;
-            netToAng = 50;
+            netToAng = 0;
             tick_timeout = 50;
             replay_tick_timeout = 5;
             protocol_id = "tagion_dart_sync_pid";
