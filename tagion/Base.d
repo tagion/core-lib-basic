@@ -349,3 +349,5 @@ static unittest {
     static assert(is(void==CastTo!(string, AliasSeq!(int, long, double))));
     static assert(is(double==CastTo!(float, AliasSeq!(int, long, double))));
 }
+
+shared bool abort=false;
