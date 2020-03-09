@@ -156,6 +156,7 @@ struct Options {
 
     struct SSLService {
         string task_name;          /// Task name of the SSLService used
+        string response_task_name; /// Name of the respose task name (If this is not set the respose service is not started)
         string prefix;
         string address;            /// Ip address
         ushort port;               /// Port
@@ -501,6 +502,8 @@ static setDefaultOption(ref Options options) {
         timeout=250;
         with(service) {
             prefix="transervice";
+            task_name=prefix;
+            response_task_name="respose";
             address = "0.0.0.0";
             port = 10_800;
             select_timeout=300;
@@ -527,7 +530,7 @@ static setDefaultOption(ref Options options) {
     }
     // Logger
     with(options.logger) {
-        task_name="tagion.logger";
+        task_name="logger";
         file_name="/tmp/tagion.log";
         flush=true;
         to_console=true;
@@ -535,7 +538,7 @@ static setDefaultOption(ref Options options) {
 
     // DART
     with(options.dart) {
-        task_name = "tagion_dart_tid";
+        task_name = "tagion.dart";
         protocol_id  = "tagion_dart_pid";
         with(host){
             timeout = 3000;
@@ -563,7 +566,7 @@ static setDefaultOption(ref Options options) {
             tick_timeout = 50;
             replay_tick_timeout = 5;
             protocol_id = "tagion_dart_sync_pid";
-            task_name = "tagion_dart_sync_tid";
+            task_name = "dart.sync";
 
             attempts = 20;
 
@@ -579,7 +582,7 @@ static setDefaultOption(ref Options options) {
 
         with(mdns){
             protocol_id = "tagion_dart_mdns_pid";
-            task_name = "tagion_dart_mdns_tid";
+            task_name = "dart.mdns";
             delay_before_start = 5000;
             interval = 400;
             with(host){
@@ -591,7 +594,7 @@ static setDefaultOption(ref Options options) {
         with(subs){
             masterPort = 4030;
             task_name = "tagion_dart_subs_tid";
-            protocol_id = "tagion_dart_subs_pid";
+            protocol_id = "dart.subs";
             tick_timeout = 500;
             with(host){
                 timeout = 3_000_000;
