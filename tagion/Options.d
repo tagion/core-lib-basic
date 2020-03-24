@@ -122,6 +122,7 @@ struct Options {
     ulong port;
     ulong port_base;
     ushort min_port;       /// Minum value of the port number
+    string path_to_shared_info;
     mixin JSONCommon;
 
     struct Heatbeat {
@@ -193,7 +194,8 @@ struct Options {
     Monitor monitor;
 
     struct Transaction {
-        string task_name;
+        string protocol_id;
+        string task_name;    /// Transaction task name
         string prefix;
         uint timeout;     /// Socket listerne timeout in msecs
         SSLService service;
@@ -221,6 +223,7 @@ struct Options {
         bool synchronize;
         bool angle_from_port;
         bool request;
+        bool fast_load;
         ulong tick_timeout;
 
         struct Synchronize{
@@ -460,6 +463,7 @@ static setDefaultOption(ref Options options) {
 //  s.network_socket_port =11900;
         sequential=false;
         min_port=6000;
+        path_to_shared_info = "/tmp/info.hibon";
     }
 
     with(options.heartbeat) {
@@ -495,6 +499,7 @@ static setDefaultOption(ref Options options) {
 //            min_duration_for_accept_ms = 3000;
             certificate = "pem_files/domain.pem";
             private_key = "pem_files/domain.key.pem";
+            task_name = "transaction.service";
         }
     }
     // Monitor
@@ -532,6 +537,7 @@ static setDefaultOption(ref Options options) {
         generate = false;
         synchronize = true;
         request = false;
+        fast_load = false;
         angle_from_port = false;
         tick_timeout = 500;
         with(sync){
