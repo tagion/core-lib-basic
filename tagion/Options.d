@@ -143,6 +143,7 @@ struct Options {
     string path_arg;       /// Search path
     uint node_id;          /// This is use to set the node_id in emulator mode in normal node this is allways 0
     string node_name;      /// Name of the node
+    string ip;
     ulong port;
     ulong port_base;
     ushort min_port;       /// Minum value of the port number
@@ -417,6 +418,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "overwrite|O", "Overwrite the config file", &overwrite_switch,
 //        "transcript-enable|T", format("Transcript test enable: default: %s", options.transcript.enable), &(options.transcript.enable),
         "transaction-max|D",    format("Transaction max = 0 means all nodes: default %d", options.transaction.max),  &(options.transaction.max),
+        "ip", "Host ip", &(options.ip),
         "port", "Host port", &(options.port),
         "path|I",    "Sets the search path",     &(options.path_arg),
         "trace-gossip|g",    "Sets the search path",     &(options.trace_gossip),
@@ -468,6 +470,7 @@ static setDefaultOption(ref Options options) {
     // Main
     with(options) {
         nodeprefix="Node";
+        ip="0.0.0.0";
         port = 4001;
         port_base = 4000;
         logext="log";
