@@ -150,6 +150,24 @@ struct Options {
     string path_to_shared_info;
     mixin JSONCommon;
 
+    struct AutoNATService{
+        bool enabled;
+        ulong check_timeout;
+        string bootstrapNodes;
+
+        mixin JSONCommon;
+    }
+    AutoNATService autonat;
+    struct Discovery{
+        string protocol_id;
+        string task_name;
+        Host host;
+        ulong delay_before_start;
+        ulong interval;
+        mixin JSONCommon;
+    }
+    Discovery discovery;
+
     struct Heatbeat {
         string task_name;  /// Name of the Heart task
         mixin JSONCommon;
@@ -221,6 +239,7 @@ struct Options {
     struct Transaction {
         string protocol_id;
         string task_name;    /// Transaction task name
+        string net_task_name;
         string prefix;
         uint timeout;        /// Socket listerne timeout in msecs
         SSLService service;  /// SSL Service used by the transaction service
@@ -270,16 +289,6 @@ struct Options {
             mixin JSONCommon;
         }
         Synchronize sync;
-
-        struct Discovery{
-            string protocol_id;
-            string task_name;
-            Host host;
-            ulong delay_before_start;
-            ulong interval;
-            mixin JSONCommon;
-        }
-        Discovery discovery;
 
         struct Subscribe{
             ulong masterPort;
@@ -495,6 +504,11 @@ static setDefaultOption(ref Options options) {
     with(options.heartbeat) {
         task_name="heartbeat";
     }
+    with(options.autonat){
+        enabled = false;
+        check_timeout = 1000;
+        bootstrapNodes = "";
+    }
     // Transcript
     with (options.transcript) {
         pause_from=333;
@@ -508,6 +522,7 @@ static setDefaultOption(ref Options options) {
         max=0;
         prefix="transaction";
         task_name=prefix;
+        net_task_name="transaction_net";
         timeout=250;
         with(service) {
             prefix="transervice";
@@ -545,6 +560,18 @@ static setDefaultOption(ref Options options) {
         flush=true;
         to_console=true;
     }
+    // Discovery
+    with(options.discovery){
+        protocol_id = "tagion_dart_mdns_pid";
+        task_name = "discovery";
+        delay_before_start = 5000;
+        interval = 400;
+        with(host){
+            timeout = 3000;
+            max_size = 1024 * 10;
+        }
+    }
+
 
     // DART
     with(options.dart) {
@@ -587,17 +614,6 @@ static setDefaultOption(ref Options options) {
 
             with(host){
                 timeout = 3_000;
-                max_size = 1024 * 10;
-            }
-        }
-
-        with(discovery){
-            protocol_id = "tagion_dart_mdns_pid";
-            task_name = "dart.discovery";
-            delay_before_start = 5000;
-            interval = 400;
-            with(host){
-                timeout = 3000;
                 max_size = 1024 * 10;
             }
         }
