@@ -9,24 +9,21 @@ import std.getopt;
 
 //import stdio=std.stdio;
 import tagion.Base : basename;
-import tagion.TagionExceptions;
 
 /++
 +/
 @safe
-class OptionException : TagionException {
+class OptionException : Exception {
     this( string msg, string file = __FILE__, size_t line = __LINE__ ) {
         super(msg, file, line );
     }
 }
 
-alias check=Check!OptionException;
-// @safe
-// void check(bool flag, string msg, string file = __FILE__, size_t line = __LINE__) {
-//     if (!flag) {
-//         throw new OptionException(msg, file, line);
-//     }
-// }
+void check(bool flag, lazy string msg, string file = __FILE__, size_t line = __LINE__) {
+    if (!flag) {
+        throw new OptionException(msg, file, line);
+    }
+}
 
 /++
  mixin for implememts a JSON interface for a struct
