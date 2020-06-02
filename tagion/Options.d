@@ -148,6 +148,7 @@ struct Options {
     ulong port_base;
     ushort min_port;       /// Minum value of the port number
     string path_to_shared_info;
+    bool p2plogs;
 
     string net_mode;
     mixin JSONCommon;
@@ -163,7 +164,8 @@ struct Options {
 
     struct ServerFileDiscovery{
         string url;
-        ulong delay;
+        ulong delay_before_start;
+        ulong update;
         string tag;
         string task_name;
 
@@ -281,6 +283,7 @@ struct Options {
         bool request;
         bool fast_load;
         ulong tick_timeout;
+        bool master_from_port;
 
         struct Synchronize{
             ulong maxSlaves;
@@ -304,7 +307,7 @@ struct Options {
         Synchronize sync;
 
         struct Subscribe{
-            ulong masterPort;
+            ulong master_port;
             Host host;
             string master_task_name;
             string slave_task_name;
@@ -483,7 +486,8 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "dart-to", "Dart to angle", &(options.dart.to_ang),
         "dart-request", "Request dart data", &(options.dart.request),
         "dart-path", "Path to dart file", &(options.dart.path),
-        "logger-filename" , format("Logger file name: default: %s", options.logger.file_name), &(options.logger.file_name)
+        "logger-filename" , format("Logger file name: default: %s", options.logger.file_name), &(options.logger.file_name),
+        "p2p-logger", format("Enable conssole logs for libp2p: default: %s", options.p2plogs), &(options.p2plogs),
 //        "help!h", "Display the help text",    &help_switch,
         );
 };
@@ -513,6 +517,7 @@ static setDefaultOption(ref Options options) {
         min_port=6000;
         path_to_shared_info = "/tmp/info.hibon";
         net_mode="local";
+        p2plogs = false;
     }
 
     with(options.heartbeat) {
@@ -525,7 +530,8 @@ static setDefaultOption(ref Options options) {
     }
     with(options.serverFileDiscovery){
         url = "http://localhost";
-        delay = 10_000;
+        delay_before_start = 10_000;
+        update = 10_000;
         tag = "tag-1";
         task_name = "server_file_discovery";
     }
@@ -615,6 +621,7 @@ static setDefaultOption(ref Options options) {
         fast_load = false;
         angle_from_port = false;
         tick_timeout = 500;
+        master_from_port = true;
         with(sync){
             maxMasters = 1;
             maxSlaves = 4;
@@ -639,7 +646,7 @@ static setDefaultOption(ref Options options) {
         }
 
         with(subs){
-            masterPort = 4030;
+            master_port = 4030;
             master_task_name = "tagion_dart_subs_master_tid";
             slave_task_name = "tagion_dart_subs_slave_tid";
             protocol_id = "tagion_dart_subs_pid";
