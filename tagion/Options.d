@@ -179,6 +179,7 @@ struct Options {
         Host host;
         ulong delay_before_start;
         ulong interval;
+        bool notify_enabled;
         mixin JSONCommon;
     }
     Discovery discovery;
@@ -592,6 +593,7 @@ static setDefaultOption(ref Options options) {
         task_name = "discovery";
         delay_before_start = 5000;
         interval = 400;
+        notify_enabled = false;
         with(host){
             timeout = 3000;
             max_size = 1024 * 10;
