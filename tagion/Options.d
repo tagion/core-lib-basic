@@ -10,6 +10,7 @@ import std.getopt;
 //import stdio=std.stdio;
 import tagion.Base : basename;
 import tagion.TagionExceptions;
+import tagion.Keywords: NetworkMode;
 
 /++
 +/
@@ -517,7 +518,6 @@ static setDefaultOption(ref Options options) {
         sequential=false;
         min_port=6000;
         path_to_shared_info = "/tmp/info.hibon";
-        net_mode="local";
         p2plogs = false;
     }
 
@@ -530,9 +530,9 @@ static setDefaultOption(ref Options options) {
         bootstrapNodes = "";
     }
     with(options.serverFileDiscovery){
-        url = "http://localhost";
-        delay_before_start = 10_000;
-        update = 10_000;
+        url = "";
+        delay_before_start = 60_000;
+        update = 20_000;
         tag = "tag-1";
         task_name = "server_file_discovery";
     }
@@ -661,6 +661,24 @@ static setDefaultOption(ref Options options) {
 
         with(commands){
             read_timeout = 10_000;
+        }
+    }
+    switch(options.net_mode){
+        case NetworkMode.internal:{
+            break;
+        }
+        case NetworkMode.local:{
+            options.dart.path = "./data/%dir%/dart.drt";
+            options.path_to_shared_info = "./shared-data/info.hibon";
+            break;
+        }
+        case NetworkMode.pub: {
+            options.dart.path = "./data/dart.drt";
+            options.hostbootrap.enabled = true;
+            break;
+        }
+        default: {
+            options.net_mode="internal";
         }
     }
 //    setThreadLocalOptions();
