@@ -596,7 +596,7 @@ static setDefaultOption(ref Options options) {
         notify_enabled = false;
         with(host){
             timeout = 3000;
-            max_size = 1024 * 10;
+            max_size = 1024 * 100;
         }
     }
 
@@ -607,7 +607,7 @@ static setDefaultOption(ref Options options) {
         protocol_id  = "tagion_dart_pid";
         with(host){
             timeout = 3000;
-            max_size = 1024 * 10;
+            max_size = 1024 * 100;
         }
         name= "dart";
         prefix ="dart_";
@@ -643,7 +643,7 @@ static setDefaultOption(ref Options options) {
 
             with(host){
                 timeout = 3_000;
-                max_size = 1024 * 10;
+                max_size = 1024 * 100;
             }
         }
 
