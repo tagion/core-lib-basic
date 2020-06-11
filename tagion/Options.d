@@ -10,7 +10,7 @@ import std.getopt;
 //import stdio=std.stdio;
 import tagion.Base : basename;
 import tagion.TagionExceptions;
-import tagion.Keywords: NetworkMode;
+import tagion.Keywords: NetworkMode, ValidNetwrokModes;
 
 /++
 +/
@@ -489,6 +489,7 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "dart-request", "Request dart data", &(options.dart.request),
         "dart-path", "Path to dart file", &(options.dart.path),
         "logger-filename" , format("Logger file name: default: %s", options.logger.file_name), &(options.logger.file_name),
+        "net-mode", format("Network mode: one of [%s]: default: %s", ValidNetwrokModes, options.net_mode), &(options.net_mode),
         "p2p-logger", format("Enable conssole logs for libp2p: default: %s", options.p2plogs), &(options.p2plogs),
 //        "help!h", "Display the help text",    &help_switch,
         );
@@ -663,6 +664,9 @@ static setDefaultOption(ref Options options) {
             read_timeout = 10_000;
         }
     }
+    if(options.net_mode.length == 0){
+        options.net_mode=NetworkMode.internal;
+    }
     switch(options.net_mode){
         case NetworkMode.internal:{
             options.dart.fast_load = true;
@@ -683,7 +687,7 @@ static setDefaultOption(ref Options options) {
             break;
         }
         default: {
-            options.net_mode="internal";
+            options.net_mode=NetworkMode.internal;
         }
     }
 //    setThreadLocalOptions();
