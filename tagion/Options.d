@@ -591,7 +591,7 @@ static setDefaultOption(ref Options options) {
     with(options.discovery){
         protocol_id = "tagion_dart_mdns_pid";
         task_name = "discovery";
-        delay_before_start = 5000;
+        delay_before_start = 10_000;
         interval = 400;
         notify_enabled = false;
         with(host){
@@ -665,16 +665,21 @@ static setDefaultOption(ref Options options) {
     }
     switch(options.net_mode){
         case NetworkMode.internal:{
+            options.dart.fast_load = true;
+            options.dart.path = "./data/%dir%/dart.drt";
             break;
         }
         case NetworkMode.local:{
+            options.dart.fast_load = true;
             options.dart.path = "./data/%dir%/dart.drt";
             options.path_to_shared_info = "./shared-data/info.hibon";
             break;
         }
         case NetworkMode.pub: {
+            options.dart.fast_load = true;
             options.dart.path = "./data/dart.drt";
             options.hostbootrap.enabled = true;
+            options.dart.master_from_port = false;
             break;
         }
         default: {
