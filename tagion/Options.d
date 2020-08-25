@@ -1,6 +1,5 @@
 module tagion.Options;
 
-
 import JSON=std.json;
 import std.format;
 import std.traits;
@@ -8,15 +7,15 @@ import std.file;
 import std.getopt;
 
 //import stdio=std.stdio;
-import tagion.Base : basename;
-import tagion.TagionExceptions;
+import tagion.basic.Basic : basename, DataFormat;
+import tagion.basic.TagionExceptions;
 import tagion.Keywords: NetworkMode, ValidNetwrokModes;
 
 /++
 +/
 @safe
 class OptionException : TagionException {
-    this( string msg, string file = __FILE__, size_t line = __LINE__ ) {
+    this( string msg, string file = __FILE__, size_t line = __LINE__ ) pure {
         super(msg, file, line );
     }
 }
@@ -248,6 +247,10 @@ struct Options {
                               +/
         ushort port;      /// Monitor port
         uint timeout;     /// Socket listerne timeout in msecs
+        DataFormat dataformat;
+        /++ This specifies the data-format which is transmitted from the Monitor
+         Option is json or hibon
+        +/
         mixin JSONCommon;
     }
 
@@ -580,6 +583,7 @@ static setDefaultOption(ref Options options) {
         prefix="monitor";
         task_name=prefix;
         timeout=500;
+        dataformat=DataFormat.json;
     }
     // Logger
     with(options.logger) {
