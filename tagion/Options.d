@@ -5,6 +5,8 @@ import std.format;
 import std.traits;
 import std.file;
 import std.getopt;
+import std.array : join;
+import std.string : strip;
 
 //import stdio=std.stdio;
 import tagion.basic.Basic : basename, DataFormat;
@@ -82,6 +84,31 @@ mixin template JSONCommon() {
             static if (is(type==struct)) {
                 m.parse(json_value[name]);
             }
+            else static if (is(type==enum)) {
+            TypeCase: switch (json_value[name].str) {
+                    foreach (E; EnumMembers!type) {
+                        enum E_text=strip(E.stringof, `"`);
+                    case E_text:
+                        m=E;
+                        break TypeCase;
+                    }
+                default:
+                    string _EnumList () {
+                        string[] enum_list;
+                        static foreach(i, E; EnumMembers!type) {
+                            enum_list~=E.stringof;
+                        }
+                        if (enum_list.length is 1) {
+                            return enum_list[0];
+                        }
+                        else {
+                            return format("%s and %s", enum_list[0..$-1].join(", "), enum_list[$-1]);
+                        }
+                    }
+                    enum EnumList=_EnumList;
+                    check(0, format("Illegal value of %s only %s supported not %s", name, EnumList, json_value[name].str));
+                }
+            }
             else static if (is(type==string)) {
                 m=json_value[name].str;
             }
@@ -102,7 +129,7 @@ mixin template JSONCommon() {
                 m=json_value[name].type == JSON.JSONType.true_;
             }
             else {
-                assert(0, format("Unsupported type %s for %s member", type.stringof, m.stringof));
+                check(0, format("Unsupported type %s for %s member", type.stringof, m.stringof));
             }
         }
     }
@@ -167,7 +194,6 @@ struct Options {
         ulong delay_before_start;
         ulong update;
         string tag;
-        string token;
         string task_name;
 
         mixin JSONCommon;
@@ -495,8 +521,6 @@ static ref auto all_getopt(ref string[] args, ref bool version_switch, ref bool 
         "logger-filename" , format("Logger file name: default: %s", options.logger.file_name), &(options.logger.file_name),
         "net-mode", format("Network mode: one of [%s]: default: %s", ValidNetwrokModes, options.net_mode), &(options.net_mode),
         "p2p-logger", format("Enable conssole logs for libp2p: default: %s", options.p2plogs), &(options.p2plogs),
-        "server-token", format("Token to access shared server"), &(options.serverFileDiscovery.token),
-        "server-tag", format("Group tag(should be the same as in token payload)"), &(options.serverFileDiscovery.tag),
 //        "help!h", "Display the help text",    &help_switch,
         );
 };
@@ -541,7 +565,6 @@ static setDefaultOption(ref Options options) {
         delay_before_start = 60_000;
         update = 20_000;
         tag = "tag-1";
-        token = "";
         task_name = "server_file_discovery";
     }
     // Transcript
