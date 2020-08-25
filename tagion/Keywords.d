@@ -1,6 +1,6 @@
 module tagion.Keywords;
 
-private import tagion.Base : EnumText;
+private import tagion.basic.Basic : EnumText;
 
 // Keyword list for the HiBON packages
 protected enum _keywords = [
