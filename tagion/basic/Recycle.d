@@ -3,11 +3,11 @@ module tagion.basic.Recycle;
 struct Recycle(T) {
     private {
         T[] _active;
-        const(long)[] _reuse;
+        const(uint)[] _reuse;
     }
 
     /// Create an object of T and return it's index in '_active'
-    const(long) create(T x) {
+    const(uint) create(T x) {
         if (_reuse.length > 0) {
             const reuse_id = _reuse[$-1];
             _reuse.length--;
@@ -19,7 +19,7 @@ struct Recycle(T) {
     }
 
     /// Erase by index
-    void erase(const long id)
+    void erase(const uint id)
     in {
         assert(id >= 0);
         assert(id < _active.length);
@@ -34,7 +34,7 @@ struct Recycle(T) {
     }
 
     /// overloading function call operator
-    T opCall(const long id)
+    T opCall(const uint id)
     in {
         assert(id < _active.length);
         assert(_active[id] !is T.init);
@@ -44,7 +44,7 @@ struct Recycle(T) {
     }
 
     /// Checking for existence by id
-    bool exists(const long id) const pure nothrow {
+    bool exists(const uint id) const pure nothrow {
         if (id < _active.length) {
             return _active[id] !is T.init;
         }
