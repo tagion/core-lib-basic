@@ -15,7 +15,7 @@ struct Recycle(T) {
             return reuse_id;
         }
         _active ~= x;
-        return _active.length - 1;
+        return cast(const(uint))(_active.length - 1);
     }
 
     /// Erase by index
