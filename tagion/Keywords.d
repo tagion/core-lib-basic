@@ -7,13 +7,7 @@ protected enum _keywords = [
         // dfmt off
     "pubkey",       // Pubkey
     "signature",        // signature of the block
-//    "altitude",   // altitude
     "received_order",
-    // "tidewave",
-    // "wavefront",  // Wave front is the list of events hashs
-//    "ebody",      // Event body
-//    "event",      // Event including the eventbody
-
     // HashGraph
     "message",
     "mother",
@@ -30,8 +24,7 @@ protected enum _keywords = [
     "coin",
     "decided",
     "decided_count",
-//    "total",
-//    "decided_mask",
+
     "famous",
     "famous_votes",
     "round",
@@ -42,7 +35,7 @@ protected enum _keywords = [
     "strong_votes",
     "strong_mask",
     "iterations",
-//    "altenative",
+
     "looked_at_mask",
     "looked_at_count",
     "seeing_completed",
@@ -52,7 +45,6 @@ protected enum _keywords = [
     "time",
     "events",     // List of event
     "type",       // Package type
-//    "block",     // block
 
     "rim",
     "buckets",
@@ -60,7 +52,7 @@ protected enum _keywords = [
     "transaction_id",
     "output",
     "signatures",
-//    "signatur",
+
     "transaction_object",
     "transaction_scripting_object",
     "payers",
